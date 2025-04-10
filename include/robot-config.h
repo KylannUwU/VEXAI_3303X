@@ -10,18 +10,19 @@ extern digital_out Clamp;
 extern digital_out Doinker;
 extern controller Controller;
 extern FILE* fp;
-
+extern rotation ArmRotation;
 
 extern int startOfInteractionTime;
 extern int breakOutTime;
 #define RED true
 #define BLUE false
 
-//#define  MANAGER_ROBOT  1
+#define  MANAGER_ROBOT  1
 #define  Alliance  true
 
 #if defined(MANAGER_ROBOT)
 extern motor_group Intake; 
+extern motor Arm;
 #else
 extern motor Intake; 
 

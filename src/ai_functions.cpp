@@ -341,28 +341,37 @@ DETECTION_OBJECT findTarget(int type, bool isScored = false)
     return target;
 }
 
-bool getObject(bool CheckSide = false, bool CheckIso = false)
+
+
+bool getRing()
 {
-    bool HoldingRing = false; 
+    int type;
     int turn_step = 45;
     int turnItr = 0;
+    bool ringDetected = false;
 
-    while(!HoldingRing)
-    {    
-        DETECTION_OBJECT target = findTarget(1);
+    if(Alliance)
+    type = 1;
+    else
+    type = 2;
+    
 
-        if(ValidTarget == true)
+    while(!ringDetected)
+    {
+        DETECTION_OBJECT target = findTarget(type);
+        if(target.classID = type)
         {
-            ValidTarget = false;
-            Intake.spin(vex::directionType::fwd);
-            moveToPosition(target.mapLocation.x * 100, target.mapLocation.y * 100,-1,true,75,75);
-            vex::wait(250,msec);
-            HoldingRing = true;
+            fprintf(fp,"\r Ring detected at  (%.2f , %.2f)\n",target.mapLocation.x, target.mapLocation.y);
+            ringDetected = true;
         }
         else
         {
             if(turnItr > 4){
-                moveToPosition(-50,16.68125,-1,false);
+                if(Alliance)
+                moveToPosition(-80,-80, -1,false);
+                else
+                moveToPosition(80,-80, -1,false);
+                
                 turnItr=0;
             }
             Chassis.turn_max_voltage = 9;
@@ -370,15 +379,96 @@ bool getObject(bool CheckSide = false, bool CheckIso = false)
             Chassis.turn_to_angle(GPS.heading(deg) + turn_step);
             turnItr=turnItr+1;
             vex::wait(500,msec);
-            target = findTarget(1);
+            target = findTarget(type);
         }
-     wait(20,msec);
     }
+}
 
-    return HoldingRing;
+void ScoreRing(DETECTION_OBJECT target)
+{
+
 }
 
 
+void scoreClosestWallStake()
+{
+    static Point
+    nWallStake(0, 160),
+    pWallStake(0, -160);
+    float targetX, targetY, theta;
+
+    double negativedistance = distanceTo(nWallStake.Xcord, nWallStake.Ycord);
+    double positivedistance = distanceTo(nWallStake.Xcord, nWallStake.Ycord);
+     
+    if(negativedistance < positivedistance)
+    {
+        fprintf(fp,"\rScoring at Negative Stake\n");
+        targetX = nWallStake.Xcord;
+        targetY = nWallStake.Ycord;
+        theta = 0;
+    }
+    else
+    {
+        fprintf(fp,"\rScoring at Positive Stake\n");
+        targetX = pWallStake.Xcord;
+        targetY = pWallStake.Ycord;
+        theta = 180;
+    }
+
+
+    moveToPosition(targetX, targetY, theta);
+    MoveandScoreWallStake();
+    
+}
+
+void armControl(int target) {
+
+    const double KpLB = 0.5;
+    const double KiLB = 0.01;
+    const double KdLB = 0.1;
+
+    const double tolerance = 2;
+    double previousErrorLB = 0;
+    double integralValueLB = 0;
+
+    while (true) {
+        int encoderValue = ArmRotation.position(deg);
+        double error = target - encoderValue;
+
+        if (abs(error) <= tolerance) {
+            Arm.stop(); 
+        }
+
+        integralValueLB += error;
+        double derivative = error - previousErrorLB;
+        double output = KpLB * error + KiLB * integralValueLB + KdLB * derivative;
+
+
+        if (output > 100) output = 100;
+        else if (output < -100) output = -100;
+
+
+        Arm.spin(fwd, static_cast<int>(output), pct);
+
+        previousErrorLB = error;
+
+        wait(20, msec); 
+    }
+}
+
+
+void MoveandScoreWallStake()
+{
+    static float desiredAngle = 180;
+    static float initAngle = 0;
+    
+    Chassis.drive_with_voltage(4,4);
+    armControl(desiredAngle);
+    wait(200,msec);
+    armControl(initAngle);
+    Chassis.drive_distance(-15);
+
+}
 
 void GetMogo()
 {
@@ -386,16 +476,19 @@ void GetMogo()
     int turnItr = 0;
     bool Holding = false;
     Clamp.set(false);
+
+    
     while(!Holding)
     {
 
         DETECTION_OBJECT target = findTarget(0);
-        if(ValidTargetMogo == true)
+        if(target.classID == 0)
         {
             fprintf(fp, "\r MOGO FOUNDED\n");
-            ValidTargetMogo = false;
+            
             moveToPosition(target.mapLocation.x * 100, target.mapLocation.y * 100,-1,true,75,75);
             vex::wait(250,msec);
+            
             Chassis.set_heading(GPS.heading(deg));
             double TargetAngle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm), target.mapLocation.x * 100, target.mapLocation.y * 100);
             double desiredAngle = fmod(TargetAngle + 180, 360); 
@@ -566,7 +659,6 @@ DETECTION_OBJECT Multi_CheckforMogo()
     while (!mogoChecked)
     {
         attemps ++;
-
         target = findTarget(0);
 
         wait(100,msec);
@@ -616,11 +708,6 @@ bool HoldingMogo()
 }
 
 
-void ScoreNStake()
-{
-    getObject();
-    
-}
 
 
 

@@ -54,7 +54,7 @@ motor rightDriveC = motor(PORT3, ratio6_1, false);
 motor Intake1 = motor(PORT12, ratio6_1, true);//
 motor Intake2 = motor(PORT13, ratio6_1, true);
 motor_group Intake = motor_group(Intake1, Intake2);
-
+rotation ArmRotation = rotation(PORT16, true);
 motor Arm = motor(PORT11, ratio36_1, false);
 //motor //HangA = motor(PORT13, ratio36_1, false);
 //motor //HangB = motor(PORT14, ratio36_1, true);
