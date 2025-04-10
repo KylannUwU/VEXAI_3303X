@@ -92,12 +92,12 @@ motor Intake = motor(PORT5, ratio6_1, true);
 gps GPS = gps(PORT10, -10, -63.5, mm, 270);
 const int32_t InertialPort = PORT7;
 double Robot_x_Offset = 21;
-double Intake_Offset = 10.5;
+double Intake_Offset = 18;
 double wheel_size = 3.25;
 digital_out Clamp = digital_out(Brain.ThreeWirePort.D);
 digital_out Doinker = digital_out(Brain.ThreeWirePort.E);
-optical IntakeOptical = optical(PORT6);
-optical MogoOptical = optical(PORT9);
+optical IntakeOptical = optical(PORT9);
+optical MogoOptical = optical(PORT8);
 
 #endif
 
@@ -146,6 +146,10 @@ void tuned_constants()
 void pre_auton(void) 
 {
 
+  MogoOptical.setLightPower(100,pct);
+  IntakeOptical.setLightPower(100,pct);
+  MogoOptical.setLight(vex::ledState::on);
+  IntakeOptical.setLight(vex::ledState::on);
 
   Intake.setVelocity(100,pct);
   tuned_constants();
@@ -370,9 +374,11 @@ void auto_Interaction(void)
     {
       fprintf(fp, "\r HOLDING A MOGO  \n");
       getObject(false,false);
+      wait(20,msec);
     }
     fprintf(fp, "\r NO MOGO\n");
     GetMogo();
+    wait(20,msec);
   }
 
 }

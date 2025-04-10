@@ -355,16 +355,18 @@ void GetMogo()
             ValidTargetMogo = false;
             moveToPosition(target.mapLocation.x * 100, target.mapLocation.y * 100,-1,true,75,75);
             vex::wait(250,msec);
+            Chassis.set_heading(GPS.heading(deg));
+            double TargetAngle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm), target.mapLocation.x * 100, target.mapLocation.y * 100);
+            double desiredAngle = fmod(TargetAngle + 180, 360); 
+            fprintf(fp, "\r Target in %.2f , %.2f going from %.2f , %.2f\n",
+                    target.mapLocation.x * 100, target.mapLocation.y * 100,
+                    GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm));
+            fprintf(fp, "\r TURNING TO MOGO FROM %.2f to %.2f\n", TargetAngle, desiredAngle);
 
-            double TargetAngle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm), target.mapLocation.x *100, target.mapLocation.y *100);
-            double desiredAngle = abs(TargetAngle) + 180; 
-            fprintf(fp, "\r Target in %.2f , %.2f going from %.2f , %.2f\n",target.mapLocation.x *100, target.mapLocation.y *100 , GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm) );
-            fprintf(fp, "\r TURNING TO MOGO  FROM %.2f to %.2f\n", TargetAngle, desiredAngle);
-            if(desiredAngle > 360)
-                desiredAngle = desiredAngle - 360;   
             Chassis.turn_to_angle(desiredAngle);
+
             fprintf(fp, "\r GOING BACK TO MOGO  \n"); 
-            Chassis.drive_distance(-25);
+            Chassis.drive_distance(-28);
             Clamp.set(true);
             wait(400,msec);
             Holding = true;
@@ -383,6 +385,7 @@ void GetMogo()
             vex::wait(500,msec);
             target = findMogo();
         }
+
 
     }
 
@@ -579,7 +582,7 @@ bool HoldingMogo()
         
     }
     else
-        fprintf(fp, "\rNO MOGO, hue is  \n");
+        fprintf(fp, "\rNO MOGO, hue is %d \n", MogoOptical.hue());
     return Mogo;
 }
 
