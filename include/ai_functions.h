@@ -11,6 +11,10 @@
 /*----------------------------------------------------------------------------*/
 
 #include <field.h>
+#include <tuple>
+#include <set>
+
+
 extern Field field;
 // Calculates the distance to a given target (x, y)
 float distanceTo(double target_x, double target_y,vex::distanceUnits unit);
@@ -51,5 +55,4 @@ void auto_Isolation_15();
 
 
 DETECTION_OBJECT Multi_CheckforMogo();
-DETECTION_OBJECT findRing(bool CheckSide = true, bool CheckIso = false);
-DETECTION_OBJECT findMogo(bool CheckSide = true, bool CheckIso = false);
+DETECTION_OBJECT findTarget(int Type, bool isScored);

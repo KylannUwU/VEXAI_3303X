@@ -69,15 +69,7 @@ double calculateBearing(double currX, double currY, double targetX, double targe
     }
     // Normalize to the range [-180, 180]
     // This allows turnTo to make the smallest turn, whether going forward or backwards.
-    bearing_deg = fmod(bearing_deg, 360);
-    if (bearing_deg > 180)
-    {
-        bearing_deg -= 360;
-    }
-    else if (bearing_deg < -180)
-    {
-        bearing_deg += 360;
-    }
+    
     // fprintf(fp,"Target bearing:%.2f Degrees\n",bearing_deg);
     return bearing_deg;
 }
@@ -199,123 +191,173 @@ void moveToPosition(double target_x, double target_y, double target_theta = -1, 
 }
 
 
-DETECTION_OBJECT findMogo(bool CheckSide, bool CheckIso)
+
+
+void findScored(AI_RECORD* map, bool isScored)
+{
+    // Temporarily store mobile goals and rings
+    vector<tuple<DETECTION_OBJECT,int>> MobileGoals;
+    vector<tuple<DETECTION_OBJECT,int>> Rings;
+    vector<vector<tuple<DETECTION_OBJECT,int>>> scoredObjects;
+    DETECTION_OBJECT filterd_detections[MAX_DETECTIONS];
+    int32_t newCount;
+    const float SCORED_THRESHOLD = 0.4; 
+
+    
+    // Separate mobile goals and rings from the detection map
+    for (int i = 0; i < map->detectionCount; i++) 
+    {
+        if (map->detections[i].classID == 0) 
+            MobileGoals.push_back(make_tuple(map->detections[i],i));
+        else 
+            Rings.push_back(make_tuple(map->detections[i],i));
+    }
+    
+    for (int j = 0; j < MobileGoals.size(); j++) 
+    {
+        vector<tuple<DETECTION_OBJECT,int>> scored;
+        for (int i = 0; i < Rings.size(); i++) 
+        {
+    
+            float dx = get<0>(Rings[i]).mapLocation.x - get<0>(MobileGoals[j]).mapLocation.x;
+            float dy = get<0>(Rings[i]).mapLocation.y - get<0>(MobileGoals[j]).mapLocation.y;
+            
+            // Calculate 3D distance between ring and mobile goal
+            float distance = sqrt(dx*dx + dy*dy);
+            
+            // If distance is less than threshold, mark as scored
+            if (distance < SCORED_THRESHOLD) 
+                scored.push_back(Rings[i]);
+        }
+
+        if(!scored.empty())
+        {
+            scored.push_back(MobileGoals[j]);
+            scoredObjects.push_back(scored);
+        }
+    }
+    
+    newCount = 0;
+    set<int> scoredIndices;
+
+    if(isScored) // Store all scored objects
+    {
+        
+        for(int i = 0; i < scoredObjects.size(); i++)
+        {
+            for(int j = 0; j < scoredObjects[i].size(); j++)
+            {
+                int originalIndex = get<1>(scoredObjects[i][j]);
+                scoredIndices.insert(originalIndex);
+                
+                // Add this object to the filtered detections
+                filterd_detections[newCount++] = get<0>(scoredObjects[i][j]);
+            }
+        }
+    }
+    else // Store all objects that are not scored
+    {
+   
+        for(int i = 0; i < scoredObjects.size(); i++)
+        {
+            for(int j = 0; j < scoredObjects[i].size(); j++)
+            {
+                int originalIndex = get<1>(scoredObjects[i][j]);
+                scoredIndices.insert(originalIndex);
+            }
+        }
+        
+        // Now add all objects that are not in the scoredIndices set
+        for(int i = 0; i < map->detectionCount; i++)
+        {
+            if(scoredIndices.find(i) == scoredIndices.end())
+            {
+                filterd_detections[newCount++] = map->detections[i];
+            }
+        }
+    }
+
+    // Copy the filtered detections back to the map
+    for(int i = 0; i < newCount; i++)
+    {
+        map->detections[i] = filterd_detections[i];
+    }
+    map->detectionCount = newCount;
+}
+
+
+
+DETECTION_OBJECT findTarget(int type, bool isScored = false)
 {
     DETECTION_OBJECT target;
     static AI_RECORD local_map;
     jetson_comms.get_data(&local_map);
     double lowestDist = 1000000;
-   
-    if(local_map.detectionCount > 0 && local_map.detectionCount !=NULL)
+
+    if(type != 0)
     {
+        isScored = false;
+    }
+
+    findScored(&local_map, isScored); // Update Local map to remove scored or unscored ubjects 
+
+    if(local_map.detectionCount > 0)
+    {
+    fprintf(fp,"\r\nNumber of objects in local map: %ld ",local_map.detectionCount);
         for (int i = 0; i < local_map.detectionCount; i++)
         {
-            if(local_map.detections[i].classID == 0)
+            if(local_map.detections[i].classID == type)
             {
                 if(local_map.detections[i].probability > 0.70 && local_map.detections[i].probability <= 1) 
                 {
-                    double Mogo_Dist = distanceTo(local_map.detections[i].mapLocation.x, local_map.detections[i].mapLocation.y);
-                    if (Mogo_Dist < lowestDist)
+                    double Obj_Dist = distanceTo(local_map.detections[i].mapLocation.x*39.37, local_map.detections[i].mapLocation.y*39.37,inches);
+                    if (Obj_Dist < lowestDist)
                     {
                         target = local_map.detections[i];
-                        lowestDist = Mogo_Dist; 
-                        ValidTargetMogo = true;
-                        fprintf(fp,"\rFound Viable mogo at (%.2f, %.2f)\n", target.mapLocation.x, target.mapLocation.y);
-                        wait(20,msec);
+                        lowestDist = Obj_Dist; 
+                        fprintf(fp,"\rFound Viable Object at (%.2f, %.2f)\n", target.mapLocation.x, target.mapLocation.y);
                     }
-                    else 
-                        fprintf(fp,"\rNo Viable target Found\n");
                 }
-                else
-                    fprintf(fp,"\rNo Viable target Found, probability out of range %d \n", local_map.detections[i].probability);
-            }
-            else
-                fprintf(fp,"\rNo Viable target Found, no MOGO CLASS in local map\n");
+            } 
         }
     }
     else
-        fprintf(fp,"\rNo Viable target Found, no Objects in local map\n");
-    return target;
-}
-
-
-DETECTION_OBJECT findRing(bool CheckSide, bool CheckIso)
-{
-    DETECTION_OBJECT target;
-    static AI_RECORD local_map;
-    jetson_comms.get_data(&local_map);
-    double lowestDist = 1000000;
-    int Ring_Color = 0;
-    if(field.Blue_Side)
-        Ring_Color = RedRing;
-    else if(field.Red_Side)
-        Ring_Color = BlueRing;
-    if(local_map.detectionCount > 0 && local_map.detectionCount !=NULL)
     {
-        for (int i = 0; i < local_map.detectionCount; i++)
+        if(target.mapLocation.x < -3 || target.mapLocation.x > 3 )
         {
-            if(local_map.detections[i].classID == Ring_Color)
-            {
-                if(!field.Near_Intake(local_map.detections[i].mapLocation.x, local_map.detections[i].mapLocation.y))
-                {
-                    if(local_map.detections[i].probability > 0.70 && local_map.detections[i].probability <= 1) 
-                    {
-                        double Ring_Dist = distanceTo(local_map.detections[i].mapLocation.x, local_map.detections[i].mapLocation.y);
-                        if (Ring_Dist < lowestDist)
-                        {
-                            target = local_map.detections[i];
-                            lowestDist = Ring_Dist; 
-                            ValidTarget = true;
-                            fprintf(fp,"\rFound Viable ring at (%.2f, %.2f)\n", target.mapLocation.x, target.mapLocation.y);
-                            wait(20,msec);
-                        }
-                        else 
-                        {
-                            fprintf(fp,"\rNo Viable target Found\n");
-                            wait(20,msec);
-                        }
-                    }
-                }
-            }
+            //target.mapLocation.x = 0.00;
+            //target.classID = 99;
+        }
+        if(target.mapLocation.y < -3 || target.mapLocation.y > 3 )
+        {
+            //target.mapLocation.y = 0.00;
+            target.classID = 99;
         }
     }
+    
+    fprintf(fp,"\r\n(findtarget)Returning target: \r\nPosition:(%.2f, %.2f) \r\nClass ID:%ld \r\nProbability:%.2f \n",target.mapLocation.x, target.mapLocation.y, target.classID, target.probability );
+   
+
     return target;
 }
-
-
 
 bool getObject(bool CheckSide = false, bool CheckIso = false)
 {
-    bool HoldingBall = false; 
+    bool HoldingRing = false; 
     int turn_step = 45;
     int turnItr = 0;
 
-    while(!HoldingBall)
+    while(!HoldingRing)
     {    
-        // if(((Brain.Timer.system() - startOfInteractionTime)/1000)>breakOutTime){
-        //                fprintf(fp,"\rBREAK\n");
-        //     fprintf(fp,"\rBREAK\n");
-        //     fprintf(fp,"\rBREAK\n");
-        //     return false;
-        // }
-        DETECTION_OBJECT target = findRing(CheckSide,CheckIso);
-        // if(Balldetect.isNearObject() && CheckBallColor())
-        // {
-        //     fprintf(fp,"\rThe robot is holding a Triball\n");
-        //     Intake.stop(hold);
-        //     HoldingBall = true;
-        // } 
-       
-       // if(target.mapLocation.x && target.mapLocation.y != 0.00)
+        DETECTION_OBJECT target = findTarget(1);
+
         if(ValidTarget == true)
         {
-           // fprintf(fp,"\rFound Triball! || Triballl Location (%.2f, %.2f)\n", target.mapLocation.x, target.mapLocation.y);
-          //  fprintf(fp,"\rProbability of this target being a Triball is %f%% \n", target.probability*100);
             ValidTarget = false;
             Intake.spin(vex::directionType::fwd);
             moveToPosition(target.mapLocation.x * 100, target.mapLocation.y * 100,-1,true,75,75);
             vex::wait(250,msec);
-            HoldingBall = true;
+            HoldingRing = true;
         }
         else
         {
@@ -323,18 +365,17 @@ bool getObject(bool CheckSide = false, bool CheckIso = false)
                 moveToPosition(-50,16.68125,-1,false);
                 turnItr=0;
             }
-            //fprintf(fp,"\rSeanning for ball....\n");
             Chassis.turn_max_voltage = 9;
             fprintf(fp,"\rAngle to turn to %.2f Degrees\n",GPS.heading(deg) + turn_step);
             Chassis.turn_to_angle(GPS.heading(deg) + turn_step);
             turnItr=turnItr+1;
             vex::wait(500,msec);
-            target = findRing(CheckSide, CheckIso);
+            target = findTarget(1);
         }
      wait(20,msec);
     }
 
-    return HoldingBall;
+    return HoldingRing;
 }
 
 
@@ -348,7 +389,7 @@ void GetMogo()
     while(!Holding)
     {
 
-        DETECTION_OBJECT target = findMogo();
+        DETECTION_OBJECT target = findTarget(0);
         if(ValidTargetMogo == true)
         {
             fprintf(fp, "\r MOGO FOUNDED\n");
@@ -383,7 +424,7 @@ void GetMogo()
             Chassis.turn_to_angle(GPS.heading(deg) + turn_step);
             turnItr=turnItr+1;
             vex::wait(500,msec);
-            target = findMogo();
+            target = findTarget(0);
         }
 
 
@@ -398,29 +439,79 @@ void GetMogo()
 
 bool IntakeActivation = false;
 
-int IntakeControl_24()
+
+
+
+
+
+int IntakeControl()
 {
+
+
+    static int hue_detect_pos = 0;
+    int desiredHue = 0;
+
     IntakeActivation = true;
     int LastPosition = 0;
     int Timeout = 0;
     double Intakethreshold = 500;
     int attempDelay = 0;
     bool isStuck = false;
+     
+    if(Alliance == RED)
+      desiredHue = 115;
+    else
+      desiredHue = 30;
     
+      bool RingHue = false;
+
+
     while(IntakeActivation)
     {
-        attempDelay ++;
-        
-        if(!isStuck)
-            Intake.spin(fwd,100,pct);
+
+        if(Alliance == RED)
+        RingHue = IntakeOptical.hue() > desiredHue;
 
         else
+        RingHue = IntakeOptical.hue() < desiredHue;
+            attempDelay ++;
+
+
+        int current_pos = Intake.position(deg);
+
+        
+        if(!isStuck)
         {
-            Intake.spin(vex::directionType::rev, 100, pct);
-            wait(400, msec);
-            isStuck = false;
-            Timeout = 0;
             Intake.spin(fwd,100,pct);
+        }
+        else
+        {
+            if (RingHue) 
+            { 
+                if (hue_detect_pos == 0) 
+                hue_detect_pos = current_pos;
+                
+
+                if (current_pos - hue_detect_pos <= 235) 
+                    Intake.spin(fwd,100,pct); 
+                
+
+                else 
+                {
+                    Intake.spin(fwd,0,pct); 
+                    wait(300,msec);
+                    hue_detect_pos = 0;
+                }
+            } 
+            else
+            {
+                Intake.spin(vex::directionType::rev, 100, pct);
+                wait(400, msec);
+                isStuck = false;
+                Timeout = 0;
+                hue_detect_pos = 0;
+                Intake.spin(fwd,100,pct);
+            }
         }
         
         if(Timeout > 5)
@@ -434,79 +525,17 @@ int IntakeControl_24()
 
         else
             Timeout = 0;
-
-        
-        
-        
             
-            LastPosition = Intake.position(deg);
-            attempDelay = 0;
-        }
+        LastPosition = Intake.position(deg);
+        attempDelay = 0;
+        
+    }
 
         wait(20,msec); 
     }
     return 0;
 }
 
-int IntakeControl_15()
-{
-    IntakeActivation = true;
-    int LastPosition = 0;
-    int Timeout = 0;
-    double Intakethreshold = 500;
-    int attempDelay = 0;
-    bool isStuck = false;
-    
-    #ifdef Alliance
-    int Hue = 115;
-    #else    
-    int Hue = 30;
-    #endif
-
-    while(IntakeActivation)
-    {
-        attempDelay ++;
-        
-        if(!isStuck)
-        {
-            
-            Intake.spin(fwd,100,pct);
-        }
-        
-        
-        else
-        {
-            Intake.spin(vex::directionType::rev, 100, pct);
-            wait(400, msec);
-            isStuck = false;
-            Timeout = 0;
-            Intake.spin(fwd,100,pct);
-        }
-        
-        if(Timeout > 5)
-            isStuck = true;
-
-        if(attempDelay == 10)
-        { 
-
-        if((Intake.position(deg) - LastPosition) < Intakethreshold )
-            Timeout ++;
-
-        else
-            Timeout = 0;
-
-        
-        
-        
-            
-            LastPosition = Intake.position(deg);
-            attempDelay = 0;
-        }
-
-        wait(20,msec); 
-    }
-    return 0;
-}
 
 
 
@@ -516,7 +545,7 @@ int trackingMogo()
   while(1)
   {
 
-    DETECTION_OBJECT targetmogo = findMogo();
+    DETECTION_OBJECT targetmogo = findTarget(0);
 
     wait(20,msec);
 
@@ -538,7 +567,7 @@ DETECTION_OBJECT Multi_CheckforMogo()
     {
         attemps ++;
 
-        target = findMogo();
+        target = findTarget(0);
 
         wait(100,msec);
         fprintf(fp, "\r MOGO ATEMP %d, founded at %.2f, %.2f  \n", attemps, target.mapLocation.x, target.mapLocation.y );
@@ -585,6 +614,14 @@ bool HoldingMogo()
         fprintf(fp, "\rNO MOGO, hue is %d \n", MogoOptical.hue());
     return Mogo;
 }
+
+
+void ScoreNStake()
+{
+    getObject();
+    
+}
+
 
 
 

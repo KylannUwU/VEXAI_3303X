@@ -28,7 +28,7 @@ int breakOutTime = 55;
 /////********************************************************/////
 /////**********Red Side = true || Blue Side = false**********/////
 /////********************************************************/////
-#define  Alliance  true
+
 
 #if(Alliance)
 #pragma message("Selected Red Side")
@@ -277,13 +277,15 @@ void testing_tuning()
 //  Chassis.drive_distance(-48);
   Chassis.DriveL.resetPosition();
   Chassis.DriveR.resetPosition();
+  LeftDriveSmart.resetPosition();
+  RightDriveSmart.resetPosition();
   LeftDriveSmart.setStopping(brake);
   RightDriveSmart.setStopping(brake); 
-
+  
   Chassis.drive_with_voltage(11,11);
 
   double currentPos = Chassis.get_left_position_in(); 
-  while(currentPos < 18)
+  while(currentPos < 17)
   {
     currentPos = Chassis.get_left_position_in();
     wait(20,msec);
@@ -297,13 +299,15 @@ void testing_tuning()
 
   Chassis.drive_with_voltage(0,0);
   Doinker.set(true);
-  wait(200,msec);
-  Chassis.drive_with_voltage(-7,-5);
-  wait(400,msec);
-  Doinker.set(false);
+  wait(300,msec);
+  Chassis.drive_with_voltage(-7,-6);
+  wait(600,msec);
+  Chassis.drive_with_voltage(-6,-6);
   wait(100,msec);
+  Doinker.set(false);
   Chassis.drive_with_voltage(0,0);
   wait(1500,msec);
+  Chassis.turn_to_angle(310);
 
   DETECTION_OBJECT target = Multi_CheckforMogo();
   float mogoX = target.mapLocation.x * 100;
@@ -313,28 +317,58 @@ void testing_tuning()
   if(mogoX > 1 && mogoX < 170)
   {
     fprintf(fp, "\r MOGO VIABLE \n");
-    double currentAngle = GPS.heading(deg);
-    double TargetAngle = calculateBearing(GPS.xPosition(), GPS.yPosition(), mogoX, mogoY);
-    fprintf(fp, "\r Turning from %.2f to %.2f \n", currentAngle, TargetAngle);
-    double desiredAngle = TargetAngle + 180; 
-    if(desiredAngle > 360)
-      desiredAngle = desiredAngle - 360;     
+    Chassis.set_heading(GPS.heading(deg));
+    double TargetAngle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm), target.mapLocation.x * 100, target.mapLocation.y * 100);
+    double desiredAngle = fmod(TargetAngle + 180, 360); 
+    fprintf(fp, "\r Target in %.2f , %.2f going from %.2f , %.2f\n",
+            target.mapLocation.x * 100, target.mapLocation.y * 100,
+            GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm));
+    fprintf(fp, "\r TURNING TO MOGO FROM %.2f to %.2f\n", TargetAngle, desiredAngle);
     Chassis.turn_to_angle(desiredAngle);
     fprintf(fp, "\r turning to %.2f \n", desiredAngle);
+    fprintf(fp, "\r GOING BACK TO MOGO  \n"); 
+    Chassis.drive_distance(-28);
+    Clamp.set(true);
+    wait(400,msec);
   }
 
   else
   {
 
     fprintf(fp, "\r MOGO NOT VIABLE AT X: %.2f\n",  mogoX);
-    moveToPosition(40,20, 250);
+    moveToPosition(-15,10, -1,true);
     Doinker.set(true);
-    Chassis.turn_to_angle(225);
-    Chassis.drive_distance(-5);
+    Chassis.turn_to_angle(240);
+    Chassis.drive_distance(-35);
     Doinker.set(false);
     Chassis.drive_distance(-5);
   }
-
+  target = Multi_CheckforMogo();
+  mogoX = target.mapLocation.x * 100;
+  mogoY = target.mapLocation.y * 100; 
+  if(mogoX > 1 && mogoX < 170)
+  {
+  Chassis.set_heading(GPS.heading(deg));
+  double TargetAngle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm), target.mapLocation.x * 100, target.mapLocation.y * 100);
+  double desiredAngle = fmod(TargetAngle + 180, 360); 
+  fprintf(fp, "\r Target in %.2f , %.2f going from %.2f , %.2f\n",
+          target.mapLocation.x * 100, target.mapLocation.y * 100,
+          GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm));
+  fprintf(fp, "\r TURNING TO MOGO FROM %.2f to %.2f\n", TargetAngle, desiredAngle);
+  Chassis.turn_to_angle(desiredAngle);
+  fprintf(fp, "\r turning to %.2f \n", desiredAngle);
+  fprintf(fp, "\r GOING BACK TO MOGO  \n"); 
+  Chassis.drive_distance(-28);
+  Clamp.set(true);
+  wait(400,msec);
+  }
+  else
+  {
+    moveToPosition(105,55,0);
+    Chassis.drive_distance(-17);
+    Clamp.set(true);    
+  }
+  task intake(IntakeControl_15);
   moveToPosition(110,110, 110);
 }
 /*---------------------------------------------------------------------------*/
@@ -437,13 +471,13 @@ int main() {
       if (counter > 15)
       {
 
-          //fprintf(fp, "\r Pos %.2f\n",  Chassis.get_left_position_in());
-        //fprintf(fp,"\rTimer Value: %.1f\n",Intake.torque(vex::torqueUnits::InLb));
-        //fprintf(fp,"\rTimer Value: %.1f\n",Match.time(vex::timeUnits::sec));
-        //fprintf(fp,"\rLocal Map Pos Data || Azimuth:%.2f Degrees X:%.2f cm Y:%.2f cm\n",local_map.pos.az,local_map.pos.x*100,local_map.pos.y*100);
-       // fprintf(fp,"\rGPS Pos Data || Azimuth:%.2f Degrees X:%.2f cm Y:%.2f cm\n",GPS.heading(vex::rotationUnits::deg), GPS.xPosition(vex::distanceUnits::cm),GPS.yPosition(vex::distanceUnits::cm));
-        //fprintf(fp, "\r Timer %.2lu \n", Brain.Timer.system()/1000);
 
+        // fprintf(fp,"\r FindRing %.1f\n",Intake.torque(vex::torqueUnits::InLb));
+        // fprintf(fp,"\r  %.1f\n",Match.time(vex::timeUnits::sec));
+      //fprintf(fp,"\rLocal Map Pos Data || Azimuth:%.2f Degrees X:%.2f cm Y:%.2f cm\n",local_map.pos.az,local_map.pos.x*100,local_map.pos.y*100);
+      // fprintf(fp,"\rGPS Pos Data || Azimuth:%.2f Degrees X:%.2f cm Y:%.2f cm\n",GPS.heading(vex::rotationUnits::deg), GPS.xPosition(vex::distanceUnits::cm),GPS.yPosition(vex::distanceUnits::cm));
+      //fprintf(fp, "\r Timer %.2lu \n", Brain.Timer.system()/1000);
+      
        // DETECTION_OBJECT targetmogo = findMogo();
        // fprintf(fp, "\r Target Depth %.2f \n", targetmogo.depth );
         // Print the current match time in seconds to the controller's screen

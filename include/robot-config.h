@@ -14,10 +14,11 @@ extern FILE* fp;
 
 extern int startOfInteractionTime;
 extern int breakOutTime;
-
+#define RED true
+#define BLUE false
 
 //#define  MANAGER_ROBOT  1
-#define  Alliance  false
+#define  Alliance  true
 
 #if defined(MANAGER_ROBOT)
 extern motor_group Intake; 
