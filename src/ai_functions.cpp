@@ -20,13 +20,17 @@ using namespace vex;
 #define RedRing 1
 #define BlueRing 2
 
+#define MogoHue 60
 
 
 // Calculates the distance to the coordinates from the current robot position
 
-//GENERAL BOOL
+//GENERAL Variables
 bool ValidTarget = false;
 bool ValidTargetMogo = false;
+bool MogoIsFull = false;
+
+
 
 #pragma region MainFuncs
 
@@ -341,54 +345,29 @@ DETECTION_OBJECT findTarget(int type, bool isScored = false)
     return target;
 }
 
-
-
-bool getRing()
-{
-    int type;
-    int turn_step = 45;
-    int turnItr = 0;
-    bool ringDetected = false;
-
-    if(Alliance)
-    type = 1;
-    else
-    type = 2;
-    
-
-    while(!ringDetected)
-    {
-        DETECTION_OBJECT target = findTarget(type);
-        if(target.classID = type)
-        {
-            fprintf(fp,"\r Ring detected at  (%.2f , %.2f)\n",target.mapLocation.x, target.mapLocation.y);
-            ringDetected = true;
-        }
-        else
-        {
-            if(turnItr > 4){
-                if(Alliance)
-                moveToPosition(-80,-80, -1,false);
-                else
-                moveToPosition(80,-80, -1,false);
-                
-                turnItr=0;
-            }
-            Chassis.turn_max_voltage = 9;
-            fprintf(fp,"\rAngle to turn to %.2f Degrees\n",GPS.heading(deg) + turn_step);
-            Chassis.turn_to_angle(GPS.heading(deg) + turn_step);
-            turnItr=turnItr+1;
-            vex::wait(500,msec);
-            target = findTarget(type);
-        }
-    }
-}
-
 void ScoreRing(DETECTION_OBJECT target)
 {
+    double angle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm),target.mapLocation.x,target.mapLocation.y );
+    double distance = distanceTo(target.mapLocation.x, target.mapLocation.y);
+    Chassis.set_heading(GPS.heading(deg));
+    Chassis.turn_to_angle(angle);
+    Chassis.drive_distance(distance);
+    wait(200,msec);
 
 }
 
+void MoveandScoreWallStake()
+{
+    static float desiredAngle = 180;
+    static float initAngle = 0;
+    
+    Chassis.drive_with_voltage(4,4);
+    armControl(desiredAngle);
+    wait(200,msec);
+    armControl(initAngle);
+    Chassis.drive_distance(-15);
+
+}
 
 void scoreClosestWallStake()
 {
@@ -420,6 +399,55 @@ void scoreClosestWallStake()
     MoveandScoreWallStake();
     
 }
+
+void getRing(bool ScoreWallstake = false)
+{
+    int type;
+    int turn_step = 45;
+    int turnItr = 0;
+    bool ringDetected = false;
+
+    if(Alliance)
+    type = 1;
+    else
+    type = 2;
+    
+    DETECTION_OBJECT target = findTarget(type);
+    while(!ringDetected)
+    {
+        target = findTarget(type);
+        if(target.classID == type)
+        {
+            fprintf(fp,"\r Ring detected at  (%.2f , %.2f)\n",target.mapLocation.x, target.mapLocation.y);
+            ringDetected = true;
+            break;
+        }
+        else
+        {
+            if(turnItr > 4){
+                if(Alliance)
+                moveToPosition(-80,-80, -1,false);
+                else
+                moveToPosition(80,-80, -1,false);
+                turnItr=0;
+            }
+            Chassis.turn_max_voltage = 9;
+            fprintf(fp,"\rAngle to turn to %.2f Degrees\n",GPS.heading(deg) + turn_step);
+            Chassis.turn_to_angle(GPS.heading(deg) + turn_step);
+            turnItr=turnItr+1;
+            vex::wait(500,msec);
+            target = findTarget(type);
+        }
+    }
+    if(!ScoreWallstake)
+    ScoreRing(target);
+    else
+    scoreClosestWallStake();
+}
+
+
+
+
 
 void armControl(int target) {
 
@@ -457,18 +485,7 @@ void armControl(int target) {
 }
 
 
-void MoveandScoreWallStake()
-{
-    static float desiredAngle = 180;
-    static float initAngle = 0;
-    
-    Chassis.drive_with_voltage(4,4);
-    armControl(desiredAngle);
-    wait(200,msec);
-    armControl(initAngle);
-    Chassis.drive_distance(-15);
 
-}
 
 void GetMogo()
 {
@@ -484,31 +501,38 @@ void GetMogo()
         DETECTION_OBJECT target = findTarget(0);
         if(target.classID == 0)
         {
+            int mogoOffset = 25;
+
             fprintf(fp, "\r MOGO FOUNDED\n");
-            
-            moveToPosition(target.mapLocation.x * 100, target.mapLocation.y * 100,-1,true,75,75);
-            vex::wait(250,msec);
-            
             Chassis.set_heading(GPS.heading(deg));
             double TargetAngle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm), target.mapLocation.x * 100, target.mapLocation.y * 100);
-            double desiredAngle = fmod(TargetAngle + 180, 360); 
-            fprintf(fp, "\r Target in %.2f , %.2f going from %.2f , %.2f\n",
-                    target.mapLocation.x * 100, target.mapLocation.y * 100,
-                    GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm));
-            fprintf(fp, "\r TURNING TO MOGO FROM %.2f to %.2f\n", TargetAngle, desiredAngle);
+            double targetDistance = distanceTo(target.mapLocation.x, target.mapLocation.y);
+            Chassis.turn_to_angle(TargetAngle);
+            Chassis.drive_distance(targetDistance-mogoOffset);
+            vex::wait(250,msec);
 
+            double desiredAngle = TargetAngle + 180; 
             Chassis.turn_to_angle(desiredAngle);
-
-            fprintf(fp, "\r GOING BACK TO MOGO  \n"); 
-            Chassis.drive_distance(-28);
+            float startPos = Chassis.get_left_position_in();
+            
+            while (MogoOptical.hue() < MogoHue - 20 && MogoOptical.hue() > MogoHue + 20 && Chassis.get_left_position_in() > (startPos -25))                Chassis.drive_with_voltage(-8,-8);
+            Chassis.drive_with_voltage(-8,-8);
             Clamp.set(true);
+            wait(90,msec);
+            Chassis.drive_with_voltage(0,0);
             wait(400,msec);
-            Holding = true;
+
+            if(HoldingMogo())
+            {
+                Holding = true;
+                MogoIsFull = false;
+        
+            }
         }
         else
         {
-            if(turnItr > 4){
-                moveToPosition(110,110,-1,false);
+            if(turnItr > 6){
+                getRing(true);
                 turnItr=0;
             }
             //fprintf(fp,"\rSeanning for ball....\n");
@@ -518,6 +542,7 @@ void GetMogo()
             turnItr=turnItr+1;
             vex::wait(500,msec);
             target = findTarget(0);
+            
         }
 
 
@@ -536,49 +561,58 @@ bool IntakeActivation = false;
 
 
 
-
 int IntakeControl()
 {
 
-
-    static int hue_detect_pos = 0;
-    int desiredHue = 0;
-
     IntakeActivation = true;
-    int LastPosition = 0;
-    int Timeout = 0;
+    int
+     hue_detect_pos = 0,
+     Timeout = 0,
+     LastPosition = 0,
+     attempDelay = 0,
+     desiredHue,
+     countHue,
+     count = 0;
+    
     double Intakethreshold = 500;
-    int attempDelay = 0;
-    bool isStuck = false;
+    
+    static bool 
+        isStuck = false,
+        countState = false;
      
     if(Alliance == RED)
+    {
       desiredHue = 115;
+      countHue = 30;
+    }
     else
-      desiredHue = 30;
+    {
+        desiredHue = 30;
+        countHue = 115;
+    }  
     
       bool RingHue = false;
 
 
     while(IntakeActivation)
-    {
+    {        
+        
+
+        
+
+        attempDelay ++;
+        int current_pos = Intake.position(deg);
 
         if(Alliance == RED)
         RingHue = IntakeOptical.hue() > desiredHue;
 
         else
         RingHue = IntakeOptical.hue() < desiredHue;
-            attempDelay ++;
-
-
-        int current_pos = Intake.position(deg);
-
+            
         
         if(!isStuck)
         {
-            Intake.spin(fwd,100,pct);
-        }
-        else
-        {
+
             if (RingHue) 
             { 
                 if (hue_detect_pos == 0) 
@@ -593,18 +627,36 @@ int IntakeControl()
                 {
                     Intake.spin(fwd,0,pct); 
                     wait(300,msec);
-                    hue_detect_pos = 0;
+                    
                 }
             } 
             else
-            {
+            {   
+                if(countHue)
+                {
+                    if(!countState)
+                    {
+                        countState = true;
+                        count ++;
+                        fprintf(fp,"\rRings on MOGO: %d \n",count);
+                    }
+
+                }
+                else
+                countState = false;
+                
+                hue_detect_pos = 0;
+                Intake.spin(fwd,100,pct);
+            }            
+        }
+        else
+        {
                 Intake.spin(vex::directionType::rev, 100, pct);
                 wait(400, msec);
                 isStuck = false;
                 Timeout = 0;
-                hue_detect_pos = 0;
                 Intake.spin(fwd,100,pct);
-            }
+            
         }
         
         if(Timeout > 5)
@@ -624,6 +676,12 @@ int IntakeControl()
         
     }
 
+
+    if(count == 6)
+    {
+        MogoIsFull = true;
+        count = 0;
+    }
         wait(20,msec); 
     }
     return 0;
@@ -637,11 +695,8 @@ int trackingMogo()
   
   while(1)
   {
-
     DETECTION_OBJECT targetmogo = findTarget(0);
-
     wait(20,msec);
-
   }
   return 0;
 }
@@ -707,14 +762,47 @@ bool HoldingMogo()
     return Mogo;
 }
 
+void DropMogo()
+{
+    double lowestDist = 100000;
+    Point closestPoint(0, 0);
+    std::vector<Point> Points = 
+    {
+        Point(43, -43),   // dropPosBlue
+        Point(-43, -43),  // dropPosRed
+        Point(43, 43),    // dropNegBlue
+        Point(-43, 43)    // dropNegRed
+    };
+    
 
+    for (const Point& p : Points) 
+    {
+        double newDist = distanceTo(p.Xcord, p.Ycord); 
+        if (newDist < lowestDist) {
+            lowestDist = newDist;
+            closestPoint = p;
+        }
+        
+    }
+    
+    fprintf(fp, "\r Closest pont is %.2f , %.2f \n", closestPoint.Xcord, closestPoint.Ycord);
+    
+    Chassis.set_heading(GPS.heading(vex::rotationUnits::deg));
+    double angle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm),GPS.yPosition(vex::distanceUnits::cm),closestPoint.Xcord,closestPoint.Ycord);
+    double distance = lowestDist;
+    int backOffset = 25;
+    Chassis.turn_to_angle(angle+180);
+    Chassis.drive_distance(-(distance-backOffset));
+    Clamp.set(false);
+
+}
 
 
 
 
 #pragma endregion ControlFuncs
 
-#pragma region ISOLATION
+#pragma region MAINTASKS
 
 
 void auto_Isolation_24()
@@ -877,4 +965,24 @@ void auto_Isolation_15()
     moveToPosition(110,110, 110);
 }
 
-#pragma endregion ISOLATION
+void auto_Interaction_15()
+{
+
+}
+
+void auto_Interaction_24()
+{
+    while(1)
+    {
+        while(HoldingMogo())
+        {
+            if(!MogoIsFull)
+                getRing();
+            else
+                DropMogo();
+        }
+        GetMogo();
+    }
+}
+
+#pragma endregion MAIN TASKS

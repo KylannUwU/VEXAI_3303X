@@ -33,21 +33,16 @@ void TakeOffAllianceTriball();
 void Hanging();
 void TouchMidPost();
 #if defined(MANAGER_ROBOT)
-int TurnHangTo(int deg);
-bool GetMatchLoad(bool IsShooting, bool IsCheckingForBall);
-void Move2Drop_Pos();
-void ThrowBall();
-void BlockIntake();
-void Shooting(int Targt);
-void StartMech();
-void VHanging();
-void ScoreAllianceTriball();
+void armControl(int angle);
 #endif
 
 bool HoldingMogo();
 void GetMogo();
 int IntakeControl_24();
 int IntakeControl_15();
+
+void auto_Interaction_24();
+void auto_Interaction_15();
 
 void auto_Isolation_24();
 void auto_Isolation_15();

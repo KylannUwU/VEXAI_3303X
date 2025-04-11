@@ -74,7 +74,8 @@ digital_out Top = digital_out(Brain.ThreeWirePort.F);
 digital_out IntakePiston = digital_out(Brain.ThreeWirePort.D);
 digital_out Claw = digital_out(Brain.ThreeWirePort.G);
 
-
+optical IntakeOptical = optical(PORT4);
+optical MogoOptical = optical(PORT5);
 
 
 #else
@@ -295,18 +296,11 @@ void auto_Interaction(void)
 {
 
   
-  while(1)
-  {
-    while(HoldingMogo())
-    {
-      fprintf(fp, "\r HOLDING A MOGO  \n");
-      getObject(false,false);
-      wait(20,msec);
-    }
-    fprintf(fp, "\r NO MOGO\n");
-    GetMogo();
-    wait(20,msec);
-  }
+  #ifdef MANAGER_ROBOT
+  auto_Interaction_24();
+  #else
+
+  #endif
 
 }
 

@@ -3,8 +3,8 @@ using namespace vex;
 
 extern brain Brain;
 extern Drive Chassis;  
-extern motor LeftDriveSmart;
-extern motor RightDriveSmart;
+extern motor_group LeftDriveSmart;
+extern motor_group RightDriveSmart;
 extern gps GPS;
 extern optical MogoOptical;
 extern optical IntakeOptical;
