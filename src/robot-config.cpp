@@ -22,7 +22,8 @@ const int32_t MGopt_Port = PORT17;
 double wheel_size = 2.75;
 double Robot_x_Offset = 0;
 double Intake_Offset = 0;
-double WS_Offset = 0;
+double MG_Offset = 0;
+double Arm_Offset = 0;
 
 //////////////////////////////////////////////////
 ////////////////24" Robot Specific////////////////
@@ -56,7 +57,8 @@ const int32_t MGopt_Port = PORT17;
 double wheel_size = 3.25;
 double Robot_x_Offset = 0;
 double Intake_Offset = 0;
-double WS_Offset = 0;
+double MG_Offset = 0;
+double Arm_Offset = 0;
 
 //////////////////////////////////////////////////
 ////////////////15" Robot Specific////////////////
@@ -72,7 +74,7 @@ brain Brain;
 ai::jetson  jetson_comms;
 FILE *fp = fopen("/dev/serial2","wb");
 controller Controller = controller(primary);
-Field field(Robot_x_Offset, Intake_Offset, WS_Offset);
+Field field(Robot_x_Offset, Intake_Offset, MG_Offset, Arm_Offset);
 timer Match_timer = timer();
 
 motor_group LeftDriveSmart = motor_group(leftDriveA, leftDriveB, leftDriveC);

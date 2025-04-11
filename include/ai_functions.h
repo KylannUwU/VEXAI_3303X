@@ -27,6 +27,14 @@ void ScoreRing(DETECTION_OBJECT Target_Ring);
 
 void GetMobileGoal();
 void GrabMobileGoal(DETECTION_OBJECT Target_MG);
+void ScoreMobileGoal();
+
+#if defined(MANAGER_ROBOT)
+void GetWSRing();
+void ScoreOnWall();
+#endif
+
+
 
 
 

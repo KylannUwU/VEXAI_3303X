@@ -17,6 +17,20 @@ public:
     ~Point() {}
 };
 
+class Pose
+{
+public:
+    Point Target;
+    double angle;
+    Pose() {}
+    Pose(Point Pos, double theta)
+    {
+        Target = Pos;
+        angle = theta;
+    }
+    ~Pose() {}
+};
+
 class Line
 {
 public:
@@ -32,19 +46,7 @@ public:
     }
 };
 
-// class Barrier
-// {
-// public:
-//     vector <Line> BarrierLines;
-//        Barrier(Line A , Line B, Line C )
-//     {
-//         BarrierLines.push_back(A);
-//         BarrierLines.push_back(B);
-//         BarrierLines.push_back(C);
-//     }
 
-//     ~Barrier() {}
-// };
 
 class Path
 {
@@ -88,27 +90,25 @@ public:
     bool Red_Side;
     bool Blue_Side;
     double Width_Offset;
-    double Front_Offset;
+    double Intake_Offset;
+    double MG_Offset;
     pair<Point*,double> Score_Left;
     pair<Point*,double> Score_Right;
     Line* Score_Front;
     Line* Drop_Line; 
     Point* HangPos;
     Point* ML_Point;
+ 
 
-    Field(double Robot_Width, double Intake_Offset, double Arm_Offset);
+    Field(double Robot_Width, double Front_Offset, double Rear_Offset, double Arm_Offset);
     Point* Find_Scoring_Pos();
     Point* Find_Drop_Pos();
     //bool Check_Barrier_Intersects(Point* point, Point* inPath, bool checkoffsets);
     bool Check_Obstacle_Intersects(Point* point, Point* inPath, bool checkoffsets);
     void Updtae_Intake_Zone();
-    bool In_Goal_Zone(float Ball_x, float Ball_y);
-    bool In_MatchLoad_Zone(float Ball_x, float Ball_y);
     bool In_Iso_Zone(float Ball_x, float Ball_y, bool check);
     bool In_Scored_Corner(float MG_x, float MG_y);
     bool In_Descored_Corner(float MG_x, float MG_y);
-    bool In_Offensive_Zone(float Ball_x, float Ball_y, bool check);
-    bool In_Front_Score_Zone();
     bool Near_Intake(float Ball_x, float Ball_y);
     Path Create_Path_to_Target(Point* Current, Point* Target);
 

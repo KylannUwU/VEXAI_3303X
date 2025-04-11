@@ -64,13 +64,8 @@ static Point
 
 
 
+
     
-
-
-
-
-
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 double distanceTo(Point *Point1, Point *Point2)
@@ -94,43 +89,18 @@ void Path::calcPathLength()
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Field::Field(double Robot_Width, double Intake_Offset, double Arm_Offset)
+Field::Field(double Robot_Width, double Front_Offset, double Rear_Offset, double Arm_Offset)
 {
+    static Point Alliance_WS;
 
     if (Side == TeamColor::RED)
     {
         Blue_Side = false; 
         Red_Side = true;
 
-        Isolation_Zone.push_back(&Center_Front);
-        Isolation_Zone.push_back(&Center_Rear);
-        Isolation_Zone.push_back(&Q3_Field_Corner);
-        Isolation_Zone.push_back(&Q2_Field_Corner);
+        Isolation_Zone = {&Center_Front, &Center_Rear, &Q3_Field_Corner, &Q2_Field_Corner};
 
-        // Offensive_Zone.push_back(&C_Front);
-        // Offensive_Zone.push_back(&C_Back);
-        // Offensive_Zone.push_back(&Q2_Field_Corner);
-        // Offensive_Zone.push_back(&Q1_Field_Corner);
-
-        // Scoring_Zone.push_back(&Front_Red_1);
-        // Scoring_Zone.push_back(&Front_Red_2);
-        // Scoring_Zone.push_back(&Back_RB_2);
-        // Scoring_Zone.push_back(&Back_RB_1);
-
-        // Score_Front = &Red_Score;
-        // Score_Left.first = &L_Red_Score;
-        // Score_Left.second = 180.0;
-        // Score_Right.first = &R_Red_Score;
-        // Score_Right.second = 0.0;
-
-        // Drop_Line = &Blue_Drop;
-        // ML_Point = &Q3_Match_Load_Center;
-
-        // #if defined(MANAGER_ROBOT)
-        // HangPos = new Point(-Vert_Hang_X, -Alley_Y);
-        // #else
-        // HangPos = new Point(Hor_Hang_X, -Hor_Hang_y);
-        // #endif
+        Alliance_WS = Point((Arm_Offset - Field_XY_Lim), CenterXY);
     }
     else 
     {
@@ -139,36 +109,13 @@ Field::Field(double Robot_Width, double Intake_Offset, double Arm_Offset)
 
         Isolation_Zone = {&Center_Front, &Center_Rear, &Q4_Field_Corner, &Q1_Field_Corner};
 
-        
-
-        // Offensive_Zone.push_back(&C_Front);
-        // Offensive_Zone.push_back(&C_Back);
-        // Offensive_Zone.push_back(&Q3_Field_Corner);
-        // Offensive_Zone.push_back(&Q4_Field_Corner);
-
-        // Scoring_Zone.push_back(&Front_Blue_1);
-        // Scoring_Zone.push_back(&Front_Blue_2);
-        // Scoring_Zone.push_back(&Back_RB_2);
-        // Scoring_Zone.push_back(&Back_RB_1);
-        
-        // Score_Front = &Blue_Score;
-        // Score_Left.first = &L_Blue_Score;
-        // Score_Left.second = 0.00;
-        // Score_Right.first = &R_Blue_Score;
-        // Score_Right.second = 180.0;
-
-        // Drop_Line = &Red_Drop;
-        // ML_Point = &Q1_Match_Load_Center;
-
-        // #if defined(MANAGER_ROBOT)
-        // HangPos = new Point(Vert_Hang_X, Alley_Y);
-        // #else
-        // HangPos = new Point(-Hor_Hang_X, Hor_Hang_y);
-        // #endif
+        Alliance_WS = Point((Field_XY_Lim - Arm_Offset), CenterXY);
+    
     }
 
     Width_Offset = Robot_Width;
-    Front_Offset = Intake_Offset;
+    Intake_Offset = Front_Offset;
+    MG_Offset = Rear_Offset;
 
     Path2Snap2 = {&PP1, &PP2, &PP3, &PP4, &PP5, &PP6, &PP7, &PP8};
    
@@ -180,6 +127,11 @@ Field::Field(double Robot_Width, double Intake_Offset, double Arm_Offset)
 
     Blue_Pos_Zone = {&Q4_Scoring_1, &Q4_Scoring_2, &Q4_Field_Corner};
     Blue_Neg_Zone = {&Q1_Scoring_1, &Q1_Scoring_2, &Q1_Field_Corner};
+
+    static Point Front_WS(CenterXY, (Field_XY_Lim - Arm_Offset));
+    static Point Rear_WS(CenterXY, (Arm_Offset - Field_XY_Lim));
+
+    WS_Scoring_Points = {&Alliance_WS, &Front_WS, &Rear_WS};
 
 }
 
@@ -259,8 +211,8 @@ Point* Field::Calc_Offest_Point()
     Y_pos = GPS.yPosition(vex::distanceUnits::cm),
     theta = GPS.heading(vex::rotationUnits::deg);
 
-    double dX = cos(theta) * Front_Offset;
-    double dY = sin(theta) * Front_Offset;
+    double dX = cos(theta) * Intake_Offset;
+    double dY = sin(theta) * Intake_Offset;
 
     return new Point(X_pos+dX,Y_pos+dY);
 
@@ -355,7 +307,7 @@ Line Field::FindOffsetLines(Point* P1, Point* P2, bool offsettype)
 
 bool Field::Check_Obstacle_Intersects(Point* point, Point* inPath, bool checkoffsets = false)
 {
-    return false;
+    return true;
 }
 
 void Field::Updtae_Intake_Zone()
