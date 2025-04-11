@@ -89,11 +89,6 @@ digital_out Doinker = digital_out(Brain.ThreeWirePort.C);
 digital_out Clamp = digital_out(Brain.ThreeWirePort.E);
 
 
-
-
-
-
-
 void vexcodeInit( void ) 
 {
     Brain.Screen.setCursor(2, 1);
