@@ -1,33 +1,64 @@
+
 #include "vex.h"
+#include "field.h"
+
 using namespace vex;
 
+enum TeamColor 
+{ 
+  RED, 
+  BLUE 
+}; 
+
+
+
+
+///////////////////////////////////
+///////////////////////////////////
+inline int Side = RED; 
+//inline int Side = BLUE; 
+#define  MANAGER_ROBOT    1
+///////////////////////////////////
+///////////////////////////////////
+
+extern ai::robot_link link;
 extern brain Brain;
-extern Drive Chassis;  
+extern ai::jetson jetson_comms;
+extern FILE *fp;
+extern controller Controller1;
+extern Field field;
+extern timer Match_timer;
+
 extern motor_group LeftDriveSmart;
 extern motor_group RightDriveSmart;
+extern Drive Chassis;
+
+
+//Shared Sensors
 extern gps GPS;
-extern optical MogoOptical;
 extern optical IntakeOptical;
-extern digital_out Clamp;
+extern optical MogoOptical;
+
+//Shared Pnuematics
 extern digital_out Doinker;
-extern digital_out Top;
+extern digital_out Clamp;
+
 extern controller Controller;
-extern FILE* fp;
-extern rotation ArmRotation;
 
-extern int startOfInteractionTime;
-extern int breakOutTime;
-#define RED true
-#define BLUE false
 
-#define  MANAGER_ROBOT  1
-#define  Alliance  true
 
 #if defined(MANAGER_ROBOT)
-extern motor_group Intake; 
+extern motor_group Intake;
 extern motor Arm;
+extern digital_out Top;
+extern digital_out IntakePiston;
+extern digital_out Claw;
+extern rotation ArmRotation;
 #else
-extern motor Intake; 
-
+extern motor Intake;
 #endif
 
+
+
+void tuned_constants();
+void vexcodeInit( void );

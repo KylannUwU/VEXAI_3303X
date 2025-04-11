@@ -1,13 +1,6 @@
 
 #pragma once
 #include <vector>
-#include <robot-config.h>
-#include "vex.h"
-#include <algorithm>
-#include <iostream>
-#include <initializer_list> 
-#include <cstdarg>
-#include <utility>
 
 using namespace std;
 
@@ -25,6 +18,20 @@ public:
     ~Point() {}
 };
 
+class Pose
+{
+public:
+    Point Target;
+    double angle;
+    Pose() {}
+    Pose(Point Pos, double theta)
+    {
+        Target = Pos;
+        angle = theta;
+    }
+    ~Pose() {}
+};
+
 class Line
 {
 public:
@@ -40,19 +47,7 @@ public:
     }
 };
 
-class Barrier
-{
-public:
-    vector <Line> BarrierLines;
-       Barrier(Line A , Line B, Line C )
-    {
-        BarrierLines.push_back(A);
-        BarrierLines.push_back(B);
-        BarrierLines.push_back(C);
-    }
 
-    ~Barrier() {}
-};
 
 class Path
 {
@@ -67,14 +62,23 @@ public:
 class Field
 {
     private:
-    vector<Point*> Path2Snap2;
-    vector<const Barrier *> Field_Barriers;
-    vector<const Point*> Goal_Zone;
-    vector<const Point*> ML_Zone;
+    vector<Point*> Path2Snap2;//
+    vector<const Point*> Field_Obstacles; //
+    vector<const Point*> Red_Pos_Zone; //
+    vector<const Point*> Red_Neg_Zone; //
+    vector<const Point*> Blue_Pos_Zone; //
+    vector<const Point*> Blue_Neg_Zone; //
+ 
     vector<const Point*> Isolation_Zone;
-    vector<const Point*> Offensive_Zone;
-    vector<const Point*> Scoring_Zone;
-    vector<const Point*> Front_Scoring_Zone;
+
+    
+    //vector<const Point*> Offensive_Zone;
+    vector<const Point*> MG_Scoring_Points;
+    vector<const Point*> MG_Descoring_Points;
+    vector<const Point*> WS_Scoring_Points;
+
+
+    //vector<const Point*> Front_Scoring_Zone;
     vector<const Point*> Intake_Zone;
     Point* Calc_Offest_Point();
     pair<Point*, double> Dist_from_Node(int NodePos, Point* freePoint);
@@ -87,28 +91,27 @@ public:
     bool Red_Side;
     bool Blue_Side;
     double Width_Offset;
-    double Front_Offset;
+    double Intake_Offset;
+    double MG_Offset;
     pair<Point*,double> Score_Left;
     pair<Point*,double> Score_Right;
     Line* Score_Front;
     Line* Drop_Line; 
     Point* HangPos;
     Point* ML_Point;
+ 
 
-    Field(bool isRed, double Robot_Width, double Intake_Offset);
+    Field(double Robot_Width, double Front_Offset, double Rear_Offset, double Arm_Offset);
     Point* Find_Scoring_Pos();
     Point* Find_Drop_Pos();
-    bool Check_Barrier_Intersects(Point* point, Point* inPath, bool checkoffsets);
+    //bool Check_Barrier_Intersects(Point* point, Point* inPath, bool checkoffsets);
+    bool Check_Obstacle_Intersects(Point* point, Point* inPath, bool checkoffsets);
     void Updtae_Intake_Zone();
-    bool In_Goal_Zone(float Ball_x, float Ball_y);
-    bool In_MatchLoad_Zone(float Ball_x, float Ball_y);
     bool In_Iso_Zone(float Ball_x, float Ball_y, bool check);
-    bool In_Offensive_Zone(float Ball_x, float Ball_y, bool check);
-    bool In_Front_Score_Zone();
+    bool In_Scored_Corner(float MG_x, float MG_y);
+    bool In_Descored_Corner(float MG_x, float MG_y);
     bool Near_Intake(float Ball_x, float Ball_y);
     Path Create_Path_to_Target(Point* Current, Point* Target);
 
       
 };
-
-

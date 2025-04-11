@@ -9,7 +9,8 @@
 /*    Description:  Header for AI robot movement functions                    */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
-
+#include "robot-config.h"
+#include "field.h"
 #include <field.h>
 #include <tuple>
 #include <set>
