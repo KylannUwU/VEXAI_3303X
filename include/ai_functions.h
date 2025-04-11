@@ -21,25 +21,18 @@ float distanceTo(double target_x, double target_y,vex::distanceUnits unit);
 double calculateBearing(double currX, double currY, double targetX, double targetY);
 void moveToPoint(Point* Target, bool FrontFacing);
 void MovetoRing(Point* Target);
-// Moves the robot to a specified position and orientation
 void moveToPosition(double target_x, double target_y, double target_theta, bool GetBall = false, int Dspeed = 100, int Tspeed = 100);
-// Finds a target object based on the specified type
+
 DETECTION_OBJECT findTarget(bool CheckSide, bool CheckIso);
-bool CheckBallColor();
-// Retrieves an object (e.g. from the ground or a dispenser)
-bool getObject(bool CheckSide, bool CheckIso);
-void ScoreBall();
-void TakeOffAllianceTriball();
-void Hanging();
-void TouchMidPost();
+
 #if defined(MANAGER_ROBOT)
 void armControl(int angle);
 #endif
 
 bool HoldingMogo();
 void GetMogo();
-int IntakeControl_24();
-int IntakeControl_15();
+int IntakeControl();
+
 
 void auto_Interaction_24();
 void auto_Interaction_15();

@@ -75,7 +75,7 @@ digital_out IntakePiston = digital_out(Brain.ThreeWirePort.D);
 digital_out Claw = digital_out(Brain.ThreeWirePort.G);
 
 optical IntakeOptical = optical(PORT4);
-optical MogoOptical = optical(PORT5);
+optical MogoOptical = optical(PORT14);
 
 
 #else
@@ -168,7 +168,6 @@ void pre_auton(void)
   wait(50, msec);
   Brain.Screen.clearScreen();
   Chassis.Gyro.setHeading(GPS.heading(),deg);
-  Chassis.set_heading(GPS.heading());
 }
 
 
@@ -278,7 +277,7 @@ void testing_tuning()
 
 void auto_Isolation(void) 
 { 
-  task ic(IntakeControl_24);
+  task ic(IntakeControl);
 
 }
 

@@ -205,7 +205,7 @@ void findScored(AI_RECORD* map, bool isScored)
     vector<vector<tuple<DETECTION_OBJECT,int>>> scoredObjects;
     DETECTION_OBJECT filterd_detections[MAX_DETECTIONS];
     int32_t newCount;
-    const float SCORED_THRESHOLD = 0.4; 
+    const float SCORED_THRESHOLD = 0.1; 
 
     
     // Separate mobile goals and rings from the detection map
@@ -347,6 +347,7 @@ DETECTION_OBJECT findTarget(int type, bool isScored = false)
 
 void ScoreRing(DETECTION_OBJECT target)
 {
+    vex::task itk(IntakeControl);
     double angle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm),target.mapLocation.x,target.mapLocation.y );
     double distance = distanceTo(target.mapLocation.x, target.mapLocation.y);
     Chassis.set_heading(GPS.heading(deg));
@@ -366,7 +367,7 @@ void MoveandScoreWallStake()
     wait(200,msec);
     armControl(initAngle);
     Chassis.drive_distance(-15);
-
+    Top.set(false);
 }
 
 void scoreClosestWallStake()
@@ -439,10 +440,11 @@ void getRing(bool ScoreWallstake = false)
             target = findTarget(type);
         }
     }
-    if(!ScoreWallstake)
+    if(scoreClosestWallStake)
+    Top.set(true);
     ScoreRing(target);
-    else
-    scoreClosestWallStake();
+    if(ScoreWallstake)
+        scoreClosestWallStake();
 }
 
 
@@ -515,7 +517,8 @@ void GetMogo()
             Chassis.turn_to_angle(desiredAngle);
             float startPos = Chassis.get_left_position_in();
             
-            while (MogoOptical.hue() < MogoHue - 20 && MogoOptical.hue() > MogoHue + 20 && Chassis.get_left_position_in() > (startPos -25))                Chassis.drive_with_voltage(-8,-8);
+            while ((MogoOptical.hue() < MogoHue - 10 || MogoOptical.hue() > MogoHue + 10) && Chassis.get_left_position_in() > (startPos -25))                Chassis.drive_with_voltage(-8,-8);
+            fprintf(fp, "\r hue is %d \n", MogoOptical.hue());
             Chassis.drive_with_voltage(-8,-8);
             Clamp.set(true);
             wait(90,msec);
@@ -594,7 +597,7 @@ int IntakeControl()
       bool RingHue = false;
 
 
-    while(IntakeActivation)
+    while(1)
     {        
         
 
@@ -646,7 +649,10 @@ int IntakeControl()
                 countState = false;
                 
                 hue_detect_pos = 0;
-                Intake.spin(fwd,100,pct);
+                if(IntakeActivation)
+                    Intake.spin(fwd,100,pct);
+                else
+                    Intake.stop();
             }            
         }
         else
@@ -961,7 +967,7 @@ void auto_Isolation_15()
       Chassis.drive_distance(-17);
       Clamp.set(true);    
     }
-    task intake(IntakeControl_15);
+    task intake(IntakeControl);
     moveToPosition(110,110, 110);
 }
 

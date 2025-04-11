@@ -10,6 +10,7 @@ extern optical MogoOptical;
 extern optical IntakeOptical;
 extern digital_out Clamp;
 extern digital_out Doinker;
+extern digital_out Top;
 extern controller Controller;
 extern FILE* fp;
 extern rotation ArmRotation;
