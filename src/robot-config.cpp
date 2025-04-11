@@ -3,13 +3,6 @@
 
 using namespace vex;
 
-///////////////////////////////////
-///////////////////////////////////
-int Side = RED; 
-//int Side = BLUE; 
-//#define  MANAGER_ROBOT    1
-///////////////////////////////////
-///////////////////////////////////
 
 #if defined(MANAGER_ROBOT)
 #pragma message("building for the manager")
@@ -23,14 +16,18 @@ motor rightDriveB = motor(PORT2, ratio6_1, true);
 motor rightDriveC = motor(PORT3, ratio6_1, false);
 gps GPS = gps(PORT6, 133, 80, mm, 90);
 const int32_t InertialPort = PORT17;
-const int32_t T_IntakePort = PORT21;
-const int32_t B_IntakePort = PORT20;
-const int32_t Mogo_Port = PORT17;
+const int32_t Topt_Port = PORT21;
+const int32_t Bopt_Port = PORT20;
+const int32_t MGopt_Port = PORT17;
 double wheel_size = 2.75;
+double Robot_x_Offset = 0;
+double Intake_Offset = 0;
+double WS_Offset = 0;
 
 //////////////////////////////////////////////////
 ////////////////24" Robot Specific////////////////
 //////////////////////////////////////////////////
+motor Arm = motor(PORT13, ratio6_1, true);
 motor Intake1 = motor(PORT12, ratio6_1, true);
 motor Intake2 = motor(PORT13, ratio6_1, true);
 motor_group Intake = motor_group(Intake1, Intake2);
@@ -53,12 +50,13 @@ motor rightDriveB = motor(PORT19, ratio6_1, false);
 motor rightDriveC = motor(PORT20, ratio6_1, false);
 gps GPS = gps(PORT6, 133, 80, mm, 90);
 const int32_t InertialPort = PORT17;
-const int32_t T_IntakePort = PORT21;
-const int32_t B_IntakePort = PORT20;
-const int32_t Mogo_Port = PORT17;
+const int32_t Topt_Port = PORT21;
+const int32_t Bopt_Port = PORT20;
+const int32_t MGopt_Port = PORT17;
 double wheel_size = 3.25;
 double Robot_x_Offset = 0;
 double Intake_Offset = 0;
+double WS_Offset = 0;
 
 //////////////////////////////////////////////////
 ////////////////15" Robot Specific////////////////
@@ -69,24 +67,28 @@ motor Intake = motor(PORT5, ratio6_1, true);
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////
 
-controller Controller = controller(primary);
+
 brain Brain;
 ai::jetson  jetson_comms;
 FILE *fp = fopen("/dev/serial2","wb");
-
-optical TopIntakeOptical = optical(T_IntakePort);
-optical BtmIntakeOptical = optical(B_IntakePort);
-optical MobileGoal_Optical = optical(Mogo_Port);
-
-digital_out Doinker = digital_out(Brain.ThreeWirePort.C);
-digital_out Clamp = digital_out(Brain.ThreeWirePort.E);
+controller Controller = controller(primary);
+Field field(Robot_x_Offset, Intake_Offset, WS_Offset);
+timer Match_timer = timer();
 
 motor_group LeftDriveSmart = motor_group(leftDriveA, leftDriveB, leftDriveC);
 motor_group RightDriveSmart = motor_group(rightDriveA, rightDriveB, rightDriveC);
 Drive Chassis(LeftDriveSmart,RightDriveSmart,InertialPort, wheel_size, 0.75, 360);
 
-Field field(Robot_x_Offset, Intake_Offset);
-timer Match = timer();
+optical TopIntakeOptical = optical(Topt_Port);
+optical BtmIntakeOptical = optical(Bopt_Port);
+optical MobileGoal_Optical = optical(MGopt_Port);
+
+digital_out Doinker = digital_out(Brain.ThreeWirePort.C);
+digital_out Clamp = digital_out(Brain.ThreeWirePort.E);
+
+
+
+
 
 
 

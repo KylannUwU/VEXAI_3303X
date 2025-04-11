@@ -1,14 +1,20 @@
 #include "robot-config.h"
 
+// Class Variables(cm)
 static double
     Field_XY_Lim = 178.308,
-    MatchLoad_Corner = 115.89522, 
-    Alley_X = 62.4586,
-    Alley_Y = 119.6975,
     CenterXY = 0.00,
-    CenterBar_Y = 116.68125;
+    Scoring_Cord = 110, 
+    Path_Cord_1 = 25.4,
+    Path_Cord_2 = 118.284,
+    Ladder_Cord = 60.96,
+    Scoring_Ref_1 = 142.88,
+    Scoring_Ref_2 = 182.88;
 
-static Point
+
+
+// Field 
+static Point // Q for Quandrants
     Q1_Field_Corner(Field_XY_Lim, Field_XY_Lim),
     Q2_Field_Corner(Field_XY_Lim, -Field_XY_Lim),
     Q3_Field_Corner(-Field_XY_Lim, -Field_XY_Lim),
@@ -18,130 +24,49 @@ static Line
     Right_Side_Field(Q1_Field_Corner, Q2_Field_Corner),
     Rear_Side_Field(Q2_Field_Corner, Q3_Field_Corner),
     Left_Side_Field(Q3_Field_Corner, Q4_Field_Corner);
-static Point
-    Match_LoadA(Field_XY_Lim,MatchLoad_Corner),
-    Match_LoadB(MatchLoad_Corner,Field_XY_Lim);
 
-static Point
-    Center_Bar1(CenterXY, -CenterBar_Y),
-    Center_Bar2(CenterXY, CenterBar_Y),
-    Blue_Alley1(-Alley_X, Alley_Y),
-    Blue_Alley2(Alley_X, Alley_Y),
-    Red_Alley1(-Alley_X, -Alley_Y),
-    Red_Alley2(Alley_X, -Alley_Y);
-static Line
-    Center_Bar(Center_Bar1, Center_Bar2),
-    Blue_Alley(Blue_Alley1, Blue_Alley2),
-    Red_Alley(Red_Alley1, Red_Alley2);
-/////////////////////////////////////////////////////////////////////////////
-// Goals Ref Cordinates(cm)
-static double
-    Goal_X = 109.8296,
-    Goal_Y = 69.70395;
-
-static Point
-    Red_FL_Corner(Goal_X, Goal_Y),        // Front Left Corner
-    Red_BL_Corner(Field_XY_Lim, Goal_Y),  // Back Left Corner
-    Red_FR_Corner(Goal_X, -Goal_Y),       // Front Right Corner
-    Red_BR_Corner(Field_XY_Lim, -Goal_Y); // Back Right Corner
-static Line
-    Red_Front_Side(Red_FL_Corner, Red_FR_Corner), // Front Red Line
-    Red_Left_Side(Red_FL_Corner, Red_BL_Corner),  // Left Red Line
-    Red_Right_Side(Red_FR_Corner, Red_BR_Corner); // Right Red Line
-
-static Point
-    Blue_FL_Corner(-Goal_X, -Goal_Y),       // Front Left Corner
-    Blue_BL_Corner(-Field_XY_Lim, -Goal_Y), // Back Left Corner
-    Blue_FR_Corner(-Goal_X, Goal_Y),        // Right - Front Blue corner
-    Blue_BR_Corner(-Field_XY_Lim, Goal_Y);  // Right - Rear Blue corner
-static Line
-    Blue_Front_Side(Blue_FL_Corner, Blue_FR_Corner), // Front Blue Line
-    Blue_Left_Side(Blue_FL_Corner, Blue_BL_Corner),  // Left Blue Line
-    Blue_Right_Side(Blue_FR_Corner, Blue_BR_Corner); // Right Blue Line
-/////////////////////////////////////////////////////////////////////////////
-static double
-    Scoring_Ref_X = 58.7248,
-    Scoring_Ref_Y = 29.3687,
-    Nuetral_Y = 20.48, 
-    Scoring_Zone_X = 109.8296,
-    Side_Score_X = 148.9964,
-    Side_Score_Y = 95.40875;
-// Scoring Line and Points      // Nuetral_Y was 30.48
-static Point
-    // Front Scoring Line Points
-    Blue_ScoreA(-Scoring_Ref_X,Scoring_Ref_Y),
-    Blue_ScoreB(-Scoring_Ref_X,-Scoring_Ref_Y),
-    Red_ScoreA(Scoring_Ref_X,Scoring_Ref_Y),
-    Red_ScoreB(Scoring_Ref_X,-Scoring_Ref_Y),
-    //Side Scoring Points
-    L_Red_Score(Side_Score_X,Side_Score_Y),
-    R_Red_Score(Side_Score_X,-Side_Score_Y),
-    L_Blue_Score(-Side_Score_X,-Side_Score_Y),
-    R_Blue_Score(-Side_Score_X,Side_Score_Y);
-static Line
-    Red_Score(Red_ScoreA,Red_ScoreB),
-    Blue_Score(Blue_ScoreA,Blue_ScoreB);
-// Isolation Points
-static Point
-    C_Nuetral_Top(CenterXY,Nuetral_Y),
-    C_Nuetral_Bottom(CenterXY,-Nuetral_Y),
-    C_Front(0.0, Field_XY_Lim),
-    C_Back(0.0, -Field_XY_Lim),
-    Nuetral_Left(-Field_XY_Lim,-Nuetral_Y),
-    Nuetral_Right(Field_XY_Lim,Nuetral_Y);
-// Scoring Zone Points
+// Ladder
 static Point 
-    Front_Red_1(Scoring_Zone_X,CenterBar_Y),
-    Front_Red_2(Scoring_Zone_X,-CenterBar_Y),
-    Front_Blue_1(-Scoring_Zone_X,CenterBar_Y),
-    Front_Blue_2(-Scoring_Zone_X,-CenterBar_Y),
-    Back_RB_1(0.00, CenterBar_Y),
-    Back_RB_2(0.00, -CenterBar_Y);
-//Field Barriers
-static Barrier
-    RedGoal(Red_Front_Side, Red_Left_Side, Red_Right_Side),
-    BlueGoal(Blue_Front_Side, Blue_Left_Side, Blue_Right_Side),
-    CenterBarrier(Blue_Alley, Red_Alley, Center_Bar);
+    Front_Ladder_Post(CenterXY, Ladder_Cord),
+    Right_Ladder_Post(Ladder_Cord, CenterXY),
+    Rear_Ladder_Post(CenterXY, -Ladder_Cord),
+    Left_Ladder_Post(-Ladder_Cord, CenterXY);
 
-// Path 2 Snap 2 Points
-static double
-    Match_Load_Ref_X = 95.00,
-    Match_Load_Ref_Y = 153.010875,
-    Match_Load_Center_XY = 124.005438,
-    Goal_Zone_XY = 58.334275;
+//Path Points 
 static Point
-    Q1_Alley(Match_Load_Ref_X, Match_Load_Ref_Y),
-    Q1_Match_Load_Center(Match_Load_Center_XY, Match_Load_Center_XY),
-    Q1_Goal_Zone(Goal_Zone_XY, Goal_Zone_XY),
-    Q2_Goal_Zone(Goal_Zone_XY, -Goal_Zone_XY),
-    Q2_Match_Load_Center(Match_Load_Center_XY, -Match_Load_Center_XY),
-    Q2_Alley(Match_Load_Ref_X, -Match_Load_Ref_Y),
-    Q3_Alley(-Match_Load_Ref_X, -Match_Load_Ref_Y),
-    Q3_Match_Load_Center(-Match_Load_Center_XY, -Match_Load_Center_XY),
-    Q3_Goal_Zone(-Goal_Zone_XY, -Goal_Zone_XY),
-    Q4_Goal_Zone(-Goal_Zone_XY, Goal_Zone_XY),
-    Q4_Match_Load_Center(-Match_Load_Center_XY, Match_Load_Center_XY),
-    Q4_Alley(-Match_Load_Ref_X, Match_Load_Ref_Y);
+    PP1(Path_Cord_1, Path_Cord_2),
+    PP2(Path_Cord_2, Path_Cord_1),
+    PP3(Path_Cord_2, -Path_Cord_1),
+    PP4(Path_Cord_1, -Path_Cord_2),
+    PP5(-Path_Cord_1, -Path_Cord_2),
+    PP6(-Path_Cord_2, -Path_Cord_1),
+    PP7(-Path_Cord_2, Path_Cord_1),
+    PP8(-Path_Cord_1, Path_Cord_2);
 
-//Hang Points
-static double 
-    Vert_Hang_X = 103.308,
-    Hor_Hang_X = 10.00,
-    Hor_Hang_y = 158.308;
 
-static double
-    Drop_Off_X = 45.00,
-    Drop_Off_Y = 45.00;
-
+//Isolation Ref Points
 static Point
-    Red_Drop_A(Drop_Off_X,Drop_Off_Y),
-    Red_Drop_B(Drop_Off_X, -Drop_Off_Y),
-    Blue_Drop_A(-Drop_Off_X, Drop_Off_Y),
-    Blue_Drop_B(-Drop_Off_X,-Drop_Off_Y);
+    Center_Front(CenterXY,Field_XY_Lim),
+    Center_Rear(CenterXY,-Field_XY_Lim);
 
-static Line
-    Red_Drop(Red_Drop_A,Red_Drop_B),
-    Blue_Drop(Blue_Drop_A,Blue_Drop_B);
+// Scoring Zone Points
+static Point
+    Q1_Scoring_1(Scoring_Ref_2, Scoring_Ref_1),
+    Q1_Scoring_2(Scoring_Ref_1, Scoring_Ref_2),
+    Q2_Scoring_1(-Scoring_Ref_1, Scoring_Ref_2),
+    Q2_Scoring_2(-Scoring_Ref_2, Scoring_Ref_1),
+    Q3_Scoring_1(-Scoring_Ref_2, -Scoring_Ref_1),
+    Q3_Scoring_2(-Scoring_Ref_1, -Scoring_Ref_2),
+    Q4_Scoring_1(Scoring_Ref_1, -Scoring_Ref_2),
+    Q4_Scoring_2(Scoring_Ref_2, -Scoring_Ref_1);
+
+
+
+
+
+    
+
+
 
 
 
@@ -169,7 +94,7 @@ void Path::calcPathLength()
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Field::Field(double Robot_Width, double Intake_Offset)
+Field::Field(double Robot_Width, double Intake_Offset, double Arm_Offset)
 {
 
     if (Side == TeamColor::RED)
@@ -177,102 +102,84 @@ Field::Field(double Robot_Width, double Intake_Offset)
         Blue_Side = false; 
         Red_Side = true;
 
-        Isolation_Zone.push_back(&C_Nuetral_Top);
-        Isolation_Zone.push_back(&Nuetral_Right);
+        Isolation_Zone.push_back(&Center_Front);
+        Isolation_Zone.push_back(&Center_Rear);
+        Isolation_Zone.push_back(&Q3_Field_Corner);
         Isolation_Zone.push_back(&Q2_Field_Corner);
-        Isolation_Zone.push_back(&C_Back);
 
-        Offensive_Zone.push_back(&C_Front);
-        Offensive_Zone.push_back(&C_Back);
-        Offensive_Zone.push_back(&Q2_Field_Corner);
-        Offensive_Zone.push_back(&Q1_Field_Corner);
+        // Offensive_Zone.push_back(&C_Front);
+        // Offensive_Zone.push_back(&C_Back);
+        // Offensive_Zone.push_back(&Q2_Field_Corner);
+        // Offensive_Zone.push_back(&Q1_Field_Corner);
 
-        Scoring_Zone.push_back(&Front_Red_1);
-        Scoring_Zone.push_back(&Front_Red_2);
-        Scoring_Zone.push_back(&Back_RB_2);
-        Scoring_Zone.push_back(&Back_RB_1);
+        // Scoring_Zone.push_back(&Front_Red_1);
+        // Scoring_Zone.push_back(&Front_Red_2);
+        // Scoring_Zone.push_back(&Back_RB_2);
+        // Scoring_Zone.push_back(&Back_RB_1);
 
-        Score_Front = &Red_Score;
-        Score_Left.first = &L_Red_Score;
-        Score_Left.second = 180.0;
-        Score_Right.first = &R_Red_Score;
-        Score_Right.second = 0.0;
+        // Score_Front = &Red_Score;
+        // Score_Left.first = &L_Red_Score;
+        // Score_Left.second = 180.0;
+        // Score_Right.first = &R_Red_Score;
+        // Score_Right.second = 0.0;
 
-        Drop_Line = &Blue_Drop;
-        ML_Point = &Q3_Match_Load_Center;
+        // Drop_Line = &Blue_Drop;
+        // ML_Point = &Q3_Match_Load_Center;
 
-        #if defined(MANAGER_ROBOT)
-        HangPos = new Point(-Vert_Hang_X, -Alley_Y);
-        #else
-        HangPos = new Point(Hor_Hang_X, -Hor_Hang_y);
-        #endif
+        // #if defined(MANAGER_ROBOT)
+        // HangPos = new Point(-Vert_Hang_X, -Alley_Y);
+        // #else
+        // HangPos = new Point(Hor_Hang_X, -Hor_Hang_y);
+        // #endif
     }
     else 
     {
         Red_Side = false;
         Blue_Side = true;
 
-        Isolation_Zone.push_back(&C_Nuetral_Bottom);
-        Isolation_Zone.push_back(&Nuetral_Left);
-        Isolation_Zone.push_back(&Q4_Field_Corner);
-        Isolation_Zone.push_back(&C_Front);
+        Isolation_Zone = {&Center_Front, &Center_Rear, &Q4_Field_Corner, &Q1_Field_Corner};
 
-        Offensive_Zone.push_back(&C_Front);
-        Offensive_Zone.push_back(&C_Back);
-        Offensive_Zone.push_back(&Q3_Field_Corner);
-        Offensive_Zone.push_back(&Q4_Field_Corner);
-
-        Scoring_Zone.push_back(&Front_Blue_1);
-        Scoring_Zone.push_back(&Front_Blue_2);
-        Scoring_Zone.push_back(&Back_RB_2);
-        Scoring_Zone.push_back(&Back_RB_1);
         
-        Score_Front = &Blue_Score;
-        Score_Left.first = &L_Blue_Score;
-        Score_Left.second = 0.00;
-        Score_Right.first = &R_Blue_Score;
-        Score_Right.second = 180.0;
 
-        Drop_Line = &Red_Drop;
-        ML_Point = &Q1_Match_Load_Center;
+        // Offensive_Zone.push_back(&C_Front);
+        // Offensive_Zone.push_back(&C_Back);
+        // Offensive_Zone.push_back(&Q3_Field_Corner);
+        // Offensive_Zone.push_back(&Q4_Field_Corner);
 
-        #if defined(MANAGER_ROBOT)
-        HangPos = new Point(Vert_Hang_X, Alley_Y);
-        #else
-        HangPos = new Point(-Hor_Hang_X, Hor_Hang_y);
-        #endif
+        // Scoring_Zone.push_back(&Front_Blue_1);
+        // Scoring_Zone.push_back(&Front_Blue_2);
+        // Scoring_Zone.push_back(&Back_RB_2);
+        // Scoring_Zone.push_back(&Back_RB_1);
+        
+        // Score_Front = &Blue_Score;
+        // Score_Left.first = &L_Blue_Score;
+        // Score_Left.second = 0.00;
+        // Score_Right.first = &R_Blue_Score;
+        // Score_Right.second = 180.0;
+
+        // Drop_Line = &Red_Drop;
+        // ML_Point = &Q1_Match_Load_Center;
+
+        // #if defined(MANAGER_ROBOT)
+        // HangPos = new Point(Vert_Hang_X, Alley_Y);
+        // #else
+        // HangPos = new Point(-Hor_Hang_X, Hor_Hang_y);
+        // #endif
     }
 
     Width_Offset = Robot_Width;
     Front_Offset = Intake_Offset;
 
-    Path2Snap2.push_back(&Q1_Alley);
-    Path2Snap2.push_back(&Q1_Match_Load_Center);
-    Path2Snap2.push_back(&Q1_Goal_Zone);
-    Path2Snap2.push_back(&Q2_Goal_Zone);
-    Path2Snap2.push_back(&Q2_Match_Load_Center);
-    Path2Snap2.push_back(&Q2_Alley);
-    Path2Snap2.push_back(&Q3_Alley);
-    Path2Snap2.push_back(&Q3_Match_Load_Center);
-    Path2Snap2.push_back(&Q3_Goal_Zone);
-    Path2Snap2.push_back(&Q4_Goal_Zone);
-    Path2Snap2.push_back(&Q4_Match_Load_Center);
-    Path2Snap2.push_back(&Q4_Alley);
+    Path2Snap2 = {&PP1, &PP2, &PP3, &PP4, &PP5, &PP6, &PP7, &PP8};
+   
+    Field_Obstacles = {&Front_Ladder_Post, &Right_Ladder_Post,
+                       &Rear_Ladder_Post, &Left_Ladder_Post};
 
-    Field_Barriers.push_back(&CenterBarrier);
-    Field_Barriers.push_back(&BlueGoal);
-    Field_Barriers.push_back(&RedGoal);
+    Red_Pos_Zone = {&Q3_Scoring_1, &Q3_Scoring_2, &Q3_Field_Corner};
+    Red_Neg_Zone = {&Q2_Scoring_1, &Q2_Scoring_2, &Q2_Field_Corner};
 
-    Goal_Zone.push_back(&Red_BL_Corner);
-    Goal_Zone.push_back(&Red_FL_Corner);
-    Goal_Zone.push_back(&Red_FR_Corner);
-    Goal_Zone.push_back(&Red_BR_Corner);
-
-    ML_Zone.push_back(&Q1_Field_Corner);
-    ML_Zone.push_back(&Match_LoadA);
-    ML_Zone.push_back(&Match_LoadB);
-
-
+    Blue_Pos_Zone = {&Q4_Scoring_1, &Q4_Scoring_2, &Q4_Field_Corner};
+    Blue_Neg_Zone = {&Q1_Scoring_1, &Q1_Scoring_2, &Q1_Field_Corner};
 
 }
 
@@ -368,20 +275,20 @@ int orientation(Point* p, Point* q, Point* r)
     return (val > 0) ? 1 : 2; // clock or counterclock wise
 }
 
-bool Check_Intersects(Point* CurrentPos, Point* PointinPath, Line BarrierLine)
-{
-    Point Line_PointA = BarrierLine.LinePoints.first;
-    Point Line_PointB = BarrierLine.LinePoints.second;
-    int o1 = orientation(CurrentPos, PointinPath, &Line_PointA);
-    int o2 = orientation(CurrentPos, PointinPath, &Line_PointB);
-    int o3 = orientation(&Line_PointA, &Line_PointB, CurrentPos);
-    int o4 = orientation(&Line_PointA, &Line_PointB, PointinPath);
-    // General case
-    if (o1 != o2 && o3 != o4)
-        return true;
+// bool Check_Intersects(Point* CurrentPos, Point* PointinPath, Line BarrierLine)
+// {
+//     Point Line_PointA = BarrierLine.LinePoints.first;
+//     Point Line_PointB = BarrierLine.LinePoints.second;
+//     int o1 = orientation(CurrentPos, PointinPath, &Line_PointA);
+//     int o2 = orientation(CurrentPos, PointinPath, &Line_PointB);
+//     int o3 = orientation(&Line_PointA, &Line_PointB, CurrentPos);
+//     int o4 = orientation(&Line_PointA, &Line_PointB, PointinPath);
+//     // General case
+//     if (o1 != o2 && o3 != o4)
+//         return true;
 
-    return false; // Doesn't fall in any of the above cases
-}
+//     return false; // Doesn't fall in any of the above cases
+// }
 
 Line Field::FindOffsetLines(Point* P1, Point* P2, bool offsettype)
 {
@@ -409,40 +316,46 @@ Line Field::FindOffsetLines(Point* P1, Point* P2, bool offsettype)
     return ParallelLine;
 }
 
-bool Field::Check_Barrier_Intersects(Point* point, Point* inPath, bool checkoffsets = false)
-{   
-    Line LineA;
-    Line LineB;
-    bool Intersect = false;
+// bool Field::Check_Barrier_Intersects(Point* point, Point* inPath, bool checkoffsets = false)
+// {   
+//     Line LineA;
+//     Line LineB;
+//     bool Intersect = false;
 
-    if(checkoffsets)
-    {
-    LineA = FindOffsetLines(point,inPath,true);
-    LineB = FindOffsetLines(point,inPath,false);
-    }
+//     if(checkoffsets)
+//     {
+//     LineA = FindOffsetLines(point,inPath,true);
+//     LineB = FindOffsetLines(point,inPath,false);
+//     }
 
-    for (int i = 0; i < Field_Barriers.size(); i++)
-    {
-        for (int j = 0; j < Field_Barriers[i]->BarrierLines.size(); j++)
-        {
-            if (Check_Intersects(point, inPath, Field_Barriers[i]->BarrierLines[j]))
-            {
-                return true;
-            }
-            if(checkoffsets)
-            {
-                if(Check_Intersects(&LineA.LinePoints.first, &LineA.LinePoints.second, Field_Barriers[i]->BarrierLines[j]))
-                {
-                    return true;
-                }
-                if(Check_Intersects(&LineB.LinePoints.first, &LineB.LinePoints.second, Field_Barriers[i]->BarrierLines[j]))
-                {
-                    return true;
-                }
-            }
-        }
-    }
-    return Intersect;
+//     for (int i = 0; i < Field_Obstacles.size(); i++)
+//     {
+//         for (int j = 0; j < Field_Obstacles[i]->BarrierLines.size(); j++)
+//         {
+//             if (Check_Intersects(point, inPath, Field_Obstacles[i]->BarrierLines[j]))
+//             {
+//                 return true;
+//             }
+//             if(checkoffsets)
+//             {
+//                 if(Check_Intersects(&LineA.LinePoints.first, &LineA.LinePoints.second, Field_Barriers[i]->BarrierLines[j]))
+//                 {
+//                     return true;
+//                 }
+//                 if(Check_Intersects(&LineB.LinePoints.first, &LineB.LinePoints.second, Field_Barriers[i]->BarrierLines[j]))
+//                 {
+//                     return true;
+//                 }
+//             }
+//         }
+//     }
+//     return Intersect;
+// }
+
+
+bool Field::Check_Obstacle_Intersects(Point* point, Point* inPath, bool checkoffsets = false)
+{
+    return false;
 }
 
 void Field::Updtae_Intake_Zone()
@@ -497,44 +410,44 @@ bool Inside_Polygon(float tar_x, float tar_y, vector <const Point*> Zone)
     return inside;
 }
 
-bool Field::In_Goal_Zone(float Ball_x, float Ball_y)
-{
-    Ball_x = fabs(Ball_x);
-    return Inside_Polygon(Ball_x, Ball_y, Goal_Zone);
-}
 
-bool Field::In_MatchLoad_Zone(float Ball_x, float Ball_y)
-{
-    Ball_x = fabs(Ball_x);
-    Ball_y = fabs(Ball_y);
-    return Inside_Polygon(Ball_x, Ball_y, ML_Zone);
-}
 
-bool Field::In_Offensive_Zone(float Ball_x, float Ball_y, bool check)
-{   if(check)
-        return Inside_Polygon(Ball_x, Ball_y, Offensive_Zone);
+bool Field::In_Scored_Corner(float MG_x, float MG_y)
+{
+    MG_x = fabs(MG_x);
+    MG_y = fabs(MG_y);
+    if(Inside_Polygon(MG_x, MG_y, Red_Pos_Zone) || Inside_Polygon(MG_x, MG_y, Blue_Pos_Zone))
+        return true;
     else 
-        check = true;
-    return check;
+        return false;
+
 }
-bool Field::In_Front_Score_Zone()
-{   
-    return Inside_Polygon((GPS.xPosition(vex::distanceUnits::cm )/100), (GPS.yPosition(vex::distanceUnits::cm)/100),Scoring_Zone);
+
+bool Field::In_Descored_Corner(float MG_x, float MG_y)
+{
+    MG_x = fabs(MG_x);
+    MG_y = fabs(MG_y);
+    if(Inside_Polygon(MG_x, MG_y, Red_Neg_Zone) || Inside_Polygon(MG_x, MG_y, Blue_Neg_Zone))
+        return true;
+    else 
+        return false;
+
 }
 
 
-bool Field::In_Iso_Zone(float Ball_x, float Ball_y, bool check)
+
+bool Field::In_Iso_Zone(float Obj_x, float Obj_y, bool check)
 {
     if(check)
-        return Inside_Polygon(Ball_x, Ball_y, Isolation_Zone);
+        return Inside_Polygon(Obj_x, Obj_y, Isolation_Zone);
     else
         check = true;
     return check;
 }
 
-bool Field::Near_Intake(float Ball_x, float Ball_y)
+bool Field::Near_Intake(float Ring_x, float Ring_y)
 {
-    return Inside_Polygon(Ball_x, Ball_y,Intake_Zone);
+    return Inside_Polygon(Ring_x, Ring_y,Intake_Zone);
 }
 
 bool pairCompare(const std::pair<Point*, double> &firstElem, const std::pair<Point*, double> &secondElem)
@@ -563,7 +476,7 @@ Point* Field::Find_Point_on_Path(Point* freePoint)
     for (int j = 0; j < Point_Dist.size(); j++)
     {
         //fprintf(fp,"\nPoint in Path:(%.2f, %.2f) distance from point (%.2f, %.2f): %.2f cm\n", Point_Dist[j].first->Xcord, Point_Dist[j].first->Xcord, freePoint->Xcord, freePoint->Ycord, Point_Dist[j].second);
-        if (!Check_Barrier_Intersects(freePoint, Point_Dist[j].first, true))
+        if (!Check_Obstacle_Intersects(freePoint, Point_Dist[j].first, true))
         {
             in_Path = Point_Dist[j].first;
             break;

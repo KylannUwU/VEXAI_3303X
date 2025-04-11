@@ -63,9 +63,13 @@ void auto_Isolation(void)
 
 void auto_Interaction(void) 
 {
-    findTarget(0,true);
-    wait(5,sec);
-    findTarget(0,false);
+    GetMobileGoal();
+    while(true)
+    {
+      GetRing();
+    }
+
+    
 }
 
 /*---------------------------------------------------------------------------*/

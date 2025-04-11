@@ -21,3 +21,6 @@ build/src/JAR-Template/util.o
 build/src/main.o
 build/src/ai_functions.o
 .vscode/vex_project_settings.json
+build/src/ai_functions.o
+build/src/field.o
+build/src/main.o

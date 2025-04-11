@@ -4,30 +4,6 @@
 
 using namespace vex;
 
-
-extern FILE *fp;
-extern brain Brain;
-extern controller Controller1;
-extern Field field;
-
-
-//Shared Sensors
-extern gps GPS;
-
-extern optical TopIntakeOptical;
-extern optical BtmIntakeOptical;
-extern optical MobileGoal_Optical;
-
-//Shared Pnuematics
-extern digital_out Doinker;
-extern digital_out Clamp;
-
-extern motor_group LeftDriveSmart;
-extern motor_group RightDriveSmart;
-extern Drive Chassis;
-
-extern int Side;
-
 enum TeamColor 
 { 
   RED, 
@@ -36,9 +12,45 @@ enum TeamColor
 
 
 
+
+///////////////////////////////////
+///////////////////////////////////
+inline int Side = RED; 
+//inline int Side = BLUE; 
+//#define  MANAGER_ROBOT    1
+///////////////////////////////////
+///////////////////////////////////
+
+extern ai::robot_link link;
+extern brain Brain;
+extern ai::jetson jetson_comms;
+extern FILE *fp;
+extern controller Controller1;
+extern Field field;
+extern timer Match_timer;
+
+extern motor_group LeftDriveSmart;
+extern motor_group RightDriveSmart;
+extern Drive Chassis;
+
+
+//Shared Sensors
+extern gps GPS;
+extern optical TopIntakeOptical;
+extern optical BtmIntakeOptical;
+extern optical MobileGoal_Optical;
+
+//Shared Pnuematics
+extern digital_out Doinker;
+extern digital_out Clamp;
+
+
+
+
+
 #if defined(MANAGER_ROBOT)
 extern motor_group Intake;
-extern motor Arm
+extern motor Arm;
 extern digital_out Top;
 extern digital_out IntakePiston;
 extern digital_out Claw;

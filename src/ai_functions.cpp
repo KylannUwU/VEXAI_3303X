@@ -347,12 +347,12 @@ DETECTION_OBJECT findTarget(int type, bool isScored = false)
     {
         if(target.mapLocation.x < -3 || target.mapLocation.x > 3 )
         {
-            //target.mapLocation.x = 0.00;
-            //target.classID = 99;
+            target.mapLocation.x = 0.00;
+            target.classID = 99;
         }
-        if(target.mapLocation.y < -3 || target.mapLocation.y > 3 )
+        else if(target.mapLocation.y < -3 || target.mapLocation.y > 3 )
         {
-            //target.mapLocation.y = 0.00;
+            target.mapLocation.y = 0.00;
             target.classID = 99;
         }
     }
@@ -475,6 +475,7 @@ void GrabMobileGoal(DETECTION_OBJECT Target_MG)
     bool detectMG = false;
     float MG_max = 70;
     float MG_min = 60;
+
     while(!detectMG)
     {
         if (MobileGoal_Optical.hue() >= MG_min && 
