@@ -38,6 +38,7 @@ enum TeamColor
 
 #if defined(MANAGER_ROBOT)
 extern motor_group Intake;
+extern motor Arm
 extern digital_out Top;
 extern digital_out IntakePiston;
 extern digital_out Claw;

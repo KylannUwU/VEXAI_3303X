@@ -190,7 +190,7 @@ void findScored(AI_RECORD* map, bool isScored)
     vector<vector<tuple<DETECTION_OBJECT,int>>> scoredObjects;
     DETECTION_OBJECT filterd_detections[MAX_DETECTIONS];
     int32_t newCount;
-    const float SCORED_THRESHOLD = 0.4; 
+    const float SCORED_THRESHOLD = 0.1; 
 
     
     // Step 1: Separate mobile goals and rings from the detection list
