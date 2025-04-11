@@ -1,4 +1,4 @@
-#include "field.h"
+#include "robot-config.h"
 
 static double
     Field_XY_Lim = 178.308,
@@ -169,10 +169,10 @@ void Path::calcPathLength()
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Field::Field(bool isRed, double Robot_Width, double Intake_Offset)
+Field::Field(double Robot_Width, double Intake_Offset)
 {
 
-    if (isRed)
+    if (Side == TeamColor::RED)
     {
         Blue_Side = false; 
         Red_Side = true;

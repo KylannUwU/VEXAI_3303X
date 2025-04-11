@@ -10,46 +10,55 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
-#include <field.h>
-extern Field field;
-// Calculates the distance to a given target (x, y)
-float distanceTo(double target_x, double target_y,vex::distanceUnits unit);
+#include "robot-config.h"
+#include "field.h"
+
+double distanceTo(double target_x, double target_y, vex::distanceUnits units);
 double calculateBearing(double currX, double currY, double targetX, double targetY);
+
 void moveToPoint(Point* Target, bool FrontFacing);
-void MovetoRing(Point* Target);
-// Moves the robot to a specified position and orientation
-void moveToPosition(double target_x, double target_y, double target_theta, bool GetBall = false, int Dspeed = 100, int Tspeed = 100);
-// Finds a target object based on the specified type
-DETECTION_OBJECT findTarget(bool CheckSide, bool CheckIso);
-bool CheckBallColor();
-// Retrieves an object (e.g. from the ground or a dispenser)
-bool getObject(bool CheckSide, bool CheckIso);
-void ScoreBall();
-void TakeOffAllianceTriball();
-void Hanging();
-void TouchMidPost();
-#if defined(MANAGER_ROBOT)
-int TurnHangTo(int deg);
-bool GetMatchLoad(bool IsShooting, bool IsCheckingForBall);
-void Move2Drop_Pos();
-void ThrowBall();
-void BlockIntake();
-void Shooting(int Targt);
-void StartMech();
-void VHanging();
-void ScoreAllianceTriball();
-#endif
+void moveToPosition(double target_x, double target_y, double target_theta, bool GetRing = false, int Dspeed = 100, int Tspeed = 100);
 
-bool HoldingMogo();
-void GetMogo();
-int IntakeControl_24();
-int IntakeControl_15();
+void findScored(AI_RECORD* map, bool isScored);
+DETECTION_OBJECT findTarget(int type, bool isScored);
 
-void auto_Isolation_24();
-void auto_Isolation_15();
+void GetRing();
+void ScoreRing(DETECTION_OBJECT Target_Ring);
+
+void GetMobileGoal();
+void GrabMobileGoal(DETECTION_OBJECT Target_MG);
 
 
 
-DETECTION_OBJECT Multi_CheckforMogo();
-DETECTION_OBJECT findRing(bool CheckSide = true, bool CheckIso = false);
-DETECTION_OBJECT findMogo(bool CheckSide = true, bool CheckIso = false);
+
+// // Retrieves an object (e.g. from the ground or a dispenser)
+// bool getObject(bool CheckSide, bool CheckIso);
+// void ScoreBall();
+// void TakeOffAllianceTriball();
+// void Hanging();
+// void TouchMidPost();
+// #if defined(MANAGER_ROBOT)
+// int TurnHangTo(int deg);
+// bool GetMatchLoad(bool IsShooting, bool IsCheckingForBall);
+// void Move2Drop_Pos();
+// void ThrowBall();
+// void BlockIntake();
+// void Shooting(int Targt);
+// void StartMech();
+// void VHanging();
+// void ScoreAllianceTriball();
+// #endif
+
+// bool HoldingMogo();
+// void GetMogo();
+// int IntakeControl_24();
+// int IntakeControl_15();
+
+// void auto_Isolation_24();
+// void auto_Isolation_15();
+
+
+
+// DETECTION_OBJECT Multi_CheckforMogo();
+// DETECTION_OBJECT findRing(bool CheckSide = true, bool CheckIso = false);
+// DETECTION_OBJECT findMogo(bool CheckSide = true, bool CheckIso = false);

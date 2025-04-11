@@ -10,20 +10,16 @@
 			"${vex_sdkPath}/gcc/include",
 			"${vex_sdkPath}/include/**",
 			"${workspaceFolder}/include/**",
-			"${workspaceFolder}/src/**",
-			"${vex_gcc}/arm-none-eabi/armv7-ar/thumb",
-			"${workspaceFolder}**",
-			"C:/Users/robol/Desktop/VEXAI_3303X/**"
+			"${workspaceFolder}/src/**"
 		]
 	},
 	"configurations": [
 		{
 			"name": "Win32",
 			"includePath": [
-				"${vex_sdkIncludes}",
-				"C:/Users/robol/Desktop/VEXAI_3303X/**"
+				"${vex_sdkIncludes}"
 			],
-			"compilerPath": "C:/Users/robol/AppData/Roaming/Code/User/globalStorage/vexrobotics.vexcode/tools/cpp/toolchain_win32/clang/bin/clang",
+			"compilerPath": "${vex_compilerPath}",
 			"cStandard": "gnu99",
 			"cppStandard": "gnu++11",
 			"intelliSenseMode": "windows-clang-x86"

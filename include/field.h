@@ -1,13 +1,5 @@
 
 #pragma once
-#include <vector>
-#include <robot-config.h>
-#include "vex.h"
-#include <algorithm>
-#include <iostream>
-#include <initializer_list> 
-#include <cstdarg>
-#include <utility>
 
 using namespace std;
 
@@ -95,7 +87,7 @@ public:
     Point* HangPos;
     Point* ML_Point;
 
-    Field(bool isRed, double Robot_Width, double Intake_Offset);
+    Field(double Robot_Width, double Intake_Offset);
     Point* Find_Scoring_Pos();
     Point* Find_Drop_Pos();
     bool Check_Barrier_Intersects(Point* point, Point* inPath, bool checkoffsets);
