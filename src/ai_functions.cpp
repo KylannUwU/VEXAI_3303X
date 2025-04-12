@@ -330,7 +330,7 @@ DETECTION_OBJECT findTarget(int type, bool isScored = false)
     }
     else
     {
-        if(target.classID != 0  || target.classID != 1 || target.classID != 2 || abs(target.mapLocation.x) > 1.75 || abs(target.mapLocation.y) > 1.75  )
+        if(target.classID != 0  && target.classID != 1 && target.classID != 2 && abs(target.mapLocation.x) > 1.75 || abs(target.mapLocation.y) > 1.75  )
         {
             //target.mapLocation.x = 0.00;
             target.classID = 99;
@@ -343,6 +343,13 @@ DETECTION_OBJECT findTarget(int type, bool isScored = false)
         //     target.classID = 99;
         // }
     }
+    if(target.classID != 0  && target.classID != 1 && target.classID != 2 || abs(target.mapLocation.x) > 1.75 || abs(target.mapLocation.y) > 1.75  )
+        {
+            //target.mapLocation.x = 0.00;
+            target.classID = 99;
+        }
+        if(abs(target.mapLocation.x) > 1.3 && abs(target.mapLocation.y) > 1.3)
+            target.classID = 99;
     
     fprintf(fp,"\r\n(findtarget)Returning target: \r\nPosition:(%.2f, %.2f) \r\nClass ID:%ld \r\nProbability:%.2f \n",target.mapLocation.x, target.mapLocation.y, target.classID, target.probability );
    
@@ -1237,19 +1244,30 @@ void auto_Isolation_15()
     Chassis.drive_with_voltage(11,11);
   
     double currentPos = Chassis.get_left_position_in(); 
-    while(currentPos < 19)
+   if(Side == RED)
+    {
+        while(currentPos < 28)
     {
       currentPos = Chassis.get_left_position_in();
       wait(20,msec);
     }
-
+    
+    }
+    else
+    {
+        while(currentPos < 19)
+    {
+      currentPos = Chassis.get_left_position_in();
+      wait(20,msec);
+    }
+}
 
     
 
     if(Side == RED)
     {
     Chassis.drive_with_voltage(1,8);
-    while(Chassis.get_absolute_heading() > 45 )
+    while(Chassis.get_absolute_heading() > 85 )
     wait(20,msec);    
     }
     else
@@ -1292,7 +1310,7 @@ void auto_Isolation_15()
       fprintf(fp, "\r MOGO VIABLE \n");
       Chassis.set_heading(GPS.heading(deg));
       double TargetAngle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm), target.mapLocation.x * 100, target.mapLocation.y * 100);
-      double desiredAngle = fmod(TargetAngle + 180, 360); 
+      double desiredAngle = TargetAngle + 180; 
       fprintf(fp, "\r Target in %.2f , %.2f going from %.2f , %.2f\n",
               target.mapLocation.x * 100, target.mapLocation.y * 100,
               GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm));
