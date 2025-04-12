@@ -20,9 +20,9 @@ const int32_t InertialPort = PORT17;
 const int32_t opt_Port = PORT15;
 const int32_t MGopt_Port = PORT14;
 double wheel_size = 2.75;
-double Robot_x_Offset = 0;
-double Intake_Offset = 0;
-double MG_Offset = 15;
+double Robot_x_Offset = 2;
+double Intake_Offset = 10;
+double MG_Offset = 10;
 double Arm_Offset = 0;
 
 //////////////////////////////////////////////////
@@ -55,15 +55,15 @@ const int32_t InertialPort = PORT7;
 const int32_t opt_Port = PORT9;
 const int32_t MGopt_Port = PORT8;
 double wheel_size = 3.25;
-double Robot_x_Offset = 15;
-double Intake_Offset = 15;
-double MG_Offset = 20;
-double Arm_Offset = 20;
+double Robot_x_Offset = 2;
+double Intake_Offset = 2;
+double MG_Offset = 10;
+double Arm_Offset = 2;
 
 //////////////////////////////////////////////////
 ////////////////15" Robot Specific////////////////
 //////////////////////////////////////////////////
-motor Intake = motor(PORT5, ratio6_1, true);
+motor Intake = motor(PORT4, ratio6_1, true);
 #endif
 
 //////////////////////////////////////////////////

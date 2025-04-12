@@ -33,7 +33,7 @@ void armControl(double target);
 bool HoldingMogo();
 void GetMogo();
 int IntakeControl();
-
+void IntakeOn();
 
 void auto_Interaction_24();
 void auto_Interaction_15();

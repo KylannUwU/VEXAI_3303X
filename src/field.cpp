@@ -465,6 +465,8 @@ int Field::getIndex(Point* AdjPoint)
     { 
         index = it - Path2Snap2.begin(); 
     } 
+
+    
     return index + 1;
 } 
 
@@ -479,16 +481,23 @@ Path Field::Create_Path_to_Target(Point* Current, Point* Target)
     int 
     StartIndex = getIndex(Start),
     EndIndex = getIndex(End);
-
+    int stopper = 0;
     Path PathA; // Clockwise 
     PathA.PathPoints.push_back(Start);
     for(int i = StartIndex; i != EndIndex ; i++)
     {
+        stopper ++;
+        fprintf(fp,"\r StartI: %d\n", StartIndex);
+        fprintf(fp,"\r EndI: %d\n", EndIndex);
+        
         if (i == Path2Snap2.size())
         {
+            fprintf(fp,"\r I path a: %d\n", Path2Snap2[i]);
             i = 0;
         }
         PathA.PathPoints.push_back(Path2Snap2[i]);
+        if(stopper > 12)
+        break;
     }
     //PathA.PathPoints.push_back(End);
     PathA.PathPoints.push_back(Target);
@@ -502,6 +511,8 @@ Path Field::Create_Path_to_Target(Point* Current, Point* Target)
         if (i == 0)
         {
             i = Path2Snap2.size();
+            fprintf(fp,"\r I path b : %d\n", Path2Snap2[i]);
+            
         }
     }
     PathB.PathPoints.push_back(End);

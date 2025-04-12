@@ -164,8 +164,12 @@ void testing_tuning()
 
 void auto_Isolation(void) 
 { 
-  task ic(IntakeControl);
-
+  firstAutoFlag = false;
+  #ifdef MANAGER_ROBOT
+  auto_Isolation_24();
+  #else
+  auto_Isolation_15();
+  #endif
 }
 
 /*---------------------------------------------------------------------------*/
@@ -180,10 +184,11 @@ void auto_Isolation(void)
 
 void auto_Interaction(void) 
 {
-
-  
+  #ifdef MANAGER_ROBOT
   auto_Interaction_24();
-
+  #else
+  auto_Interaction_15();
+  #endif
 
 }
 
@@ -221,11 +226,12 @@ int main() {
   int32_t loop_time = 33;
   // start the status update display
   thread t1(dashboardTask);
+  //thread t2(IntakeOn);
   pre_auton(); 
 
   // Set up callbacks for autonomous and driver control periods.
   Competition.drivercontrol(usercontrol);
-  Competition.autonomous(auto_Interaction_15);
+  Competition.autonomous(autonomousMain);
   //Match.event(testing_tuning,10);
   // Competition.autonomous(autonomousMain);
   this_thread::sleep_for(loop_time);
@@ -241,11 +247,12 @@ int main() {
       if (counter > 15)
       {
 
-
+      //fprintf(fp,"\r Intake %.2f\n",Intake.position(degrees));
+      
         // fprintf(fp,"\r FindRing %.1f\n",Intake.torque(vex::torqueUnits::InLb));
         // fprintf(fp,"\r  %.1f\n",Match.time(vex::timeUnits::sec));
       //fprintf(fp,"\rLocal Map Pos Data || Azimuth:%.2f Degrees X:%.2f cm Y:%.2f cm\n",local_map.pos.az,local_map.pos.x*100,local_map.pos.y*100);
-      fprintf(fp,"\rGPS Pos Data || Azimuth:%.2f Degrees X:%.2f cm Y:%.2f cm\n",GPS.heading(vex::rotationUnits::deg), GPS.xPosition(vex::distanceUnits::cm),GPS.yPosition(vex::distanceUnits::cm));
+      //fprintf(fp,"\rGPS Pos Data || Azimuth:%.2f Degrees X:%.2f cm Y:%.2f cm\n",GPS.heading(vex::rotationUnits::deg), GPS.xPosition(vex::distanceUnits::cm),GPS.yPosition(vex::distanceUnits::cm));
       //fprintf(fp, "\r Timer %.2lu \n", Brain.Timer.system()/1000);
       
        // DETECTION_OBJECT targetmogo = findMogo();
