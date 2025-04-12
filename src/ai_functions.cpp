@@ -137,6 +137,9 @@ void MovetoMogo(Point* Target)
         Chassis.desired_heading = intialHeading;
         float distance = distanceTo(Target->Xcord, Target->Ycord);
         Chassis.drive_distance(distance - field.MG_Offset);
+
+
+
 }
 
 // Method that moves to a given (x,y) position and a desired target theta to finish movement facing in cm
@@ -148,7 +151,7 @@ void moveToPosition(double target_x, double target_y, double target_theta = -1, 
     Point Target(target_x, target_y);
     Point CurrentPoint(GPS.xPosition(distanceUnits::cm), GPS.yPosition(distanceUnits::cm));
 
-    if (true)//(!field.Check_Barrier_Intersects(&CurrentPoint, &Target, true))
+    if (!field.Check_Obstacle_Intersects(&CurrentPoint, &Target, true))
     {
         fprintf(fp,"\rNo Barrier Intersection found moving to point\n");
         
@@ -366,7 +369,7 @@ void ScoreRing(DETECTION_OBJECT target)
 #ifdef MANAGER_ROBOT
 void MoveandScoreWallStake()
 {
-    static float desiredAngle = 180;
+    float desiredAngle = 180;
     static float initAngle = 0;
     
     Chassis.drive_with_voltage(4,4);
@@ -465,22 +468,24 @@ void getRing(bool ScoreWallstake = false)
 
 
 #ifdef MANAGER_ROBOT
-void armControl(int target) {
+void armControl(double target) {
 
-    const double KpLB = 0.5;
-    const double KiLB = 0.01;
-    const double KdLB = 0.1;
+     double KpLB = 20;
+     double KiLB = 0.0;
+     double KdLB = 0.1;
 
-    const double tolerance = 2;
+     double tolerance = 2;
     double previousErrorLB = 0;
     double integralValueLB = 0;
-
-    while (true) {
-        int encoderValue = ArmRotation.position(deg);
+    bool done = false;
+    while (!done) {
+        double encoderValue = ArmRotation.angle(vex::rotationUnits::deg);
         double error = target - encoderValue;
-
+        fprintf(fp, "\r Target: %.2f Current: %.2f Error: %.2f \n",
+                        target,     encoderValue    ,error );
         if (abs(error) <= tolerance) {
-            Arm.stop(); 
+            Arm.stop(hold);
+            done = true; 
         }
 
         integralValueLB += error;
@@ -492,33 +497,105 @@ void armControl(int target) {
         else if (output < -100) output = -100;
 
 
-        Arm.spin(fwd, static_cast<int>(output), pct);
+        Arm.spin(fwd, static_cast<int>(-output), pct);
 
         previousErrorLB = error;
 
         wait(20, msec); 
     }
+    Arm.stop(hold);
 }
 
 #endif
+
+
+
+void GetMobileGoal()
+{ 
+    while(!HoldingMogo())
+    {
+    //add code thats loops scans for mobile goal 
+    DETECTION_OBJECT target = findTarget(0);
+    // while(target.mapLocation.x == 0 || target.mapLocation.y == 0)
+    float TurnStep = 45;
+
+    while(target.classID == 99)
+    {
+        Chassis.turn_to_angle(Chassis.get_absolute_heading() + TurnStep);
+        wait(1.5,sec);
+        target = findTarget(0);
+    }
+    //fprintf(fp,"\r\n(FindMobile Goal)Returning target: \r\nPosition:(%.2f, %.2f) \r\nClass ID:%ld \r\nProbability:%.2f \n",target.mapLocation.x, target.mapLocation.y, target.classID, target.probability );
+    
+        GrabMobileGoal(target);
+    }
+}
+
+
+///////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////
+
+
+void GrabMobileGoal(DETECTION_OBJECT Target_MG)
+{
+    //fprintf(fp,"\r\n(GrabMobileGoal)Returning target: \r\nPosition:(%.2f, %.2f) \r\nClass ID:%ld \r\nProbability:%.2f \n",Target_MG.mapLocation.x, Target_MG.mapLocation.y, Target_MG.classID, Target_MG.probability );
+    Clamp.set(false);
+    float MG_Offset = 18;
+    float Tx = Target_MG.mapLocation.x*39.37 ; 
+    float Ty = Target_MG.mapLocation.y*39.37 ;
+    double X_Pos = GPS.xPosition(vex::distanceUnits::in);
+    double Y_Pos = GPS.yPosition(vex::distanceUnits::in);
+    double targetheading = calculateBearing(X_Pos, Y_Pos, Tx, Ty);
+    double diff = fabs(GPS.heading(vex::rotationUnits::deg) - targetheading);
+    double result = (diff <= 180.0) ? diff : 360.0 - diff;
+    if((result > 90))
+    {
+        targetheading +=  180;
+    }
+    moveToPosition(Tx,Ty,-1,true);
+    // Chassis.set_heading(GPS.heading(deg));
+    // Chassis.turn_to_angle(targetheading);
+    // //Drive Function
+    // float distance = distanceTo(Tx, Ty);
+    // distance = distance - MG_Offset ;
+    // Chassis.drive_distance(distance);
+    // wait(20,msec);
+    Chassis.turn_to_angle(targetheading+180);
+    Chassis.drive_with_voltage(-5,-5);
+    bool detectMG = false;
+    float MG_max = 70;
+    float MG_min = 60;
+
+    while(!detectMG)
+    {
+        if (MogoOptical.hue() >= MG_min && 
+        MogoOptical.hue() <= MG_max)
+        {
+            detectMG = true;
+        }
+    }
+    wait(150,msec);
+    Clamp.set(true);
+    Chassis.drive_with_voltage(0,0);    
+}
+
 
 
 void GetMogo()
 {
     int turn_step = 45;
     int turnItr = 0;
-    bool Holding = false;
+
     Clamp.set(false);
 
     
-    while(!Holding)
+    while(!HoldingMogo())
     {
         Clamp.set(false);
         DETECTION_OBJECT target = findTarget(0);
         if(target.classID == 0)
         {   
             Clamp.set(false);
-            int mogoOffset = 15;
 
             #ifdef MANAGER_ROBOT
             
@@ -526,18 +603,20 @@ void GetMogo()
             Chassis.drive_max_voltage = 9;
             #endif
             fprintf(fp, "\r MOGO FOUNDED\n");
-            Chassis.set_heading(GPS.heading(deg));
-            double TargetAngle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm), target.mapLocation.x * 100, target.mapLocation.y * 100);
-            double targetDistance = distanceTo(target.mapLocation.x * 100, target.mapLocation.y* 100);
-            Chassis.turn_to_angle(TargetAngle);
-            Chassis.drive_distance(targetDistance-mogoOffset);
+            //Chassis.set_heading(GPS.heading(deg));
+             double TargetAngle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm), target.mapLocation.x * 100, target.mapLocation.y * 100);
+            // double targetDistance = distanceTo(target.mapLocation.x * 100, target.mapLocation.y* 100);
+            // Chassis.turn_to_angle(TargetAngle);
+            // Chassis.drive_distance(targetDistance-mogoOffset);
+            moveToPosition(target.mapLocation.x,target.mapLocation.y,-1,true);
             vex::wait(250,msec);
 
             double desiredAngle = TargetAngle + 180; 
             Chassis.turn_to_angle(desiredAngle);
             float startPos = Chassis.get_left_position_in();
             
-            while ((MogoOptical.hue() < MogoHue - 10 || MogoOptical.hue() > MogoHue + 10) && Chassis.get_left_position_in() > (startPos -25))                Chassis.drive_with_voltage(-8,-8);
+            while ((MogoOptical.hue() < MogoHue - 10 || MogoOptical.hue() > MogoHue + 10) && Chassis.get_left_position_in() > (startPos -25))                
+                Chassis.drive_with_voltage(-8,-8);
             fprintf(fp, "\r hue is %d \n", MogoOptical.hue());
             Chassis.drive_with_voltage(-8,-8);
             wait(200,msec);
@@ -546,12 +625,8 @@ void GetMogo()
             Chassis.drive_with_voltage(0,0);
             wait(400,msec);
 
-            if(HoldingMogo())
-            {
-                Holding = true;
-                MogoIsFull = false;
-                break;
-            }
+          
+            
         }
         else
         {
@@ -572,7 +647,7 @@ void GetMogo()
   
 
     }
-
+    MogoIsFull = false;
 }
 
 
@@ -598,9 +673,11 @@ int IntakeControl()
      desiredHue,
      countHue,
      count = 0;
-    
-    double Intakethreshold = 500;
-    
+    #ifdef MANAGER_ROBOT    
+    double Intakethreshold = 400;
+    #else
+    double Intakethreshold = 50;
+    #endif
     static bool 
         isStuck = false,
         countState = false;
@@ -637,9 +714,26 @@ int IntakeControl()
         
         if(!isStuck)
         {
-
+           
+    
             if (RingHue) 
             { 
+                #ifdef MANAGER_ROBOT    
+                Top.set(true);
+
+                if (hue_detect_pos == 0) 
+                hue_detect_pos = current_pos;
+
+                if (current_pos - hue_detect_pos <= 235) 
+                    Intake.spin(fwd,100,pct); 
+                else 
+                {
+                    armControl(200);
+                    Top.set(false);
+                    armControl(250);
+                }
+
+                #else
                 if (hue_detect_pos == 0) 
                 hue_detect_pos = current_pos;
                 
@@ -652,8 +746,9 @@ int IntakeControl()
                 {
                     Intake.spin(fwd,0,pct); 
                     wait(300,msec);
-                    
                 }
+                #endif
+                
             } 
             else
             {   
@@ -834,66 +929,238 @@ void DropMogo()
 
 #pragma region MAINTASKS
 
-
+#ifdef MANAGER ROBOT
 void auto_Isolation_24()
 {
-  Chassis.DriveL.resetPosition();
-  Chassis.DriveR.resetPosition();
- 
 
-  Chassis.drive_with_voltage(12,12);
+    int 
+        sideDef = 1,
+        ringcolor;
+    double 
+        angletoSwing,
+        leftswing,
+        rightswing,
+        mogoX,
+        mogoY,
+        sideCoordsMultiplier,
+        target,
+        angle;
 
-  double currentPos = Chassis.get_left_position_in(); 
-  while(currentPos < 22)
-  {
-    currentPos = Chassis.get_left_position_in();
-    wait(20,msec);
-  }
-  Chassis.drive_with_voltage(8,1);
-
-  while(Chassis.get_absolute_heading() > 350 || Chassis.get_absolute_heading() < 120 )
-  wait(20,msec);
-  Chassis.drive_with_voltage(0,0);
-  Doinker.set(true);
-  Chassis.drive_with_voltage(-12,-12);
-  wait(600,msec);
-  Doinker.set(false);
-  Chassis.drive_with_voltage(0,0);
-  
-  wait(1500,msec);
-
-  DETECTION_OBJECT target = Multi_CheckforMogo();
-  float mogoX = target.mapLocation.x * 100;
-  float mogoY = target.mapLocation.y * 100; 
+    bool swing;
 
 
-  if(mogoX < 1)
-  {
-    fprintf(fp, "\r MOGO VIABLE \n");
-    double currentAngle = GPS.heading(deg);
-    double TargetAngle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm), mogoX, mogoY);
-    fprintf(fp, "\r Turning from %.2f to %.2f \n", currentAngle, TargetAngle);
-    double desiredAngle = TargetAngle + 180; 
-    if(desiredAngle > 360)
-      desiredAngle = desiredAngle - 360;     
-    Chassis.turn_to_angle(desiredAngle);
-    fprintf(fp, "\r turning to %.2f \n", desiredAngle);
-  }
+    if(Side == RED)
+    {
+        sideDef = -1;
+        angletoSwing = 120;
+        swing = Chassis.get_absolute_heading() > 350 || Chassis.get_absolute_heading() < 120;
+        ringcolor = 1;
+    }
 
-  else
-  {
+    else
+    {
+        sideDef = 1;
+        angletoSwing = 240;
+        swing = Chassis.get_absolute_heading() > 250;
+        ringcolor = 2;
+    }
 
-    fprintf(fp, "\r MOGO NOT VIABLE AT X: %.2f\n",  mogoX);
-    moveToPosition(-30,-30, 110);
-    Doinker.set(true);
+    Chassis.drive_distance(7);
+    armControl(320);
+    Top.set(true);
+    armControl(200);
+    Chassis.drive_distance(-20);
+    Chassis.set_heading(GPS.heading(vex::rotationUnits::deg));
+    Chassis.turn_to_angle(180);
+    float current = Chassis.get_left_position_in();
+    Chassis.drive_with_voltage(-8,-8);
+    while ((MogoOptical.hue() < MogoHue - 10 || MogoOptical.hue() > MogoHue + 10) && Chassis.get_left_position_in() > (current -25))
+    {
+        wait(20,msec);
+    }
+    wait(250,msec);
+    fprintf(fp, "\r Clamp is: %d \n", Clamp.value());
+    Clamp.set(true);
+    wait(150,msec);
+    Chassis.drive_with_voltage(0,0);
+    Intake.spin(fwd,100,pct);
+    fprintf(fp, "\r Clamp is: %d \n", Clamp.value());
+    IntakePiston.set(true);
+    Chassis.drive_distance(20);
+    angle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm),GPS.yPosition(vex::distanceUnits::cm), 90* sideDef, -90);
+        
+    Chassis.turn_to_angle(angle);
+   
+    target = distanceTo(90 *  sideDef, -90);
+   
+    Chassis.drive_distance(target);
+
+    if(Side == RED)
+        Chassis.turn_to_angle(135);
+    else
+        Chassis.turn_to_angle(225);
+    Chassis.drive_distance(12);
+    IntakePiston.set(false);
+    wait(250,msec);
+    Chassis.drive_max_voltage = 5;
+    Chassis.drive_distance(-12);
+    Chassis.drive_max_voltage = 12;
+
+    if(Side == RED)
+        Chassis.turn_to_angle(225);
+    else
+        Chassis.turn_to_angle(135);
+
+    Chassis.drive_distance(15);
+    Chassis.turn_to_angle(180);
+    
+    if(Side == RED)
+    {
+        Chassis.drive_distance(10);
+        Chassis.right_swing_to_angle(265);
+        Doinker.set(true);
+        Chassis.drive_distance(10);
+        Chassis.turn_to_angle(310);
+        Doinker.set(false);
+    }
+
+    else
+    {
+        Chassis.drive_distance(10);
+        Chassis.left_swing_to_angle(95);
+        Doinker.set(true);
+        Chassis.drive_distance(10);
+        Chassis.turn_to_angle(50);
+        Doinker.set(false);
+    }
+
+    DETECTION_OBJECT ringtarget = findTarget(ringcolor);
+    if(ringtarget.classID != 99)
+    {
+    angle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm),GPS.yPosition(vex::distanceUnits::cm), ringtarget.mapLocation.x*100, ringtarget.mapLocation.y*100);
+    Chassis.turn_to_angle(angle);
+    target = distanceTo(ringtarget.mapLocation.x*100, ringtarget.mapLocation.y*100);
+    Chassis.drive_distance(target-1);
     Chassis.drive_distance(-5);
-    Doinker.set(false);
-    Chassis.drive_distance(-5);
-  }
+    }
+    
+    ringtarget = findTarget(ringcolor);
 
-  moveToPosition(-110,-110, 110);
+    if(ringtarget.classID != 99)
+    {
+    angle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm),GPS.yPosition(vex::distanceUnits::cm), ringtarget.mapLocation.x*100, ringtarget.mapLocation.y*100);
+    Chassis.turn_to_angle(angle);
+    target = distanceTo(ringtarget.mapLocation.x*100, ringtarget.mapLocation.y*100);
+    Chassis.drive_distance(target-1);
+    Chassis.drive_distance(-5);
+    }
+    IntakePiston.set(true);
+    angle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm),GPS.yPosition(vex::distanceUnits::cm), 0, 160);
+    Chassis.turn_to_angle(angle);
+    target = distanceTo(0, 160);
+    Chassis.drive_distance(target-4);
+    if(Side == RED)
+    {
+        Intake.stop();
+        IntakePiston.set(false);
+        Intake.spin(fwd,-100,pct);
+        wait(250,msec);
+        Intake.spin(fwd,100,pct);
+    }
+    else
+    {
+        Intake.stop();
+        IntakePiston.set(false);
+        Intake.spin(fwd,100,pct);
+    }
+    
+    Chassis.drive_distance(-25);
+
+
+    // double currentPos = Chassis.get_left_position_in(); 
+    // while(currentPos < 22)
+    // {
+    // currentPos = Chassis.get_left_position_in();
+    // wait(20,msec);
+    // }
+    // if(Side == RED)
+    // Chassis.drive_with_voltage(8,1);
+
+    // else
+    // Chassis.drive_with_voltage(1,8);
+
+    
+
+    // while(swing)
+    // {
+    // if(Side == RED)
+    //     swing = Chassis.get_absolute_heading() > 350 || Chassis.get_absolute_heading() < 120;
+    // else
+    //     swing = Chassis.get_absolute_heading() > 250;
+    //     fprintf(fp, "\r Chassis hd: %.2f \n", Chassis.get_absolute_heading());
+    // wait(20,msec);
+    // }
+    // Chassis.drive_with_voltage(0,0);
+    // Doinker.set(true);
+    // Chassis.drive_with_voltage(-12,-12);
+    // wait(600,msec);
+    // Doinker.set(false);
+    // Chassis.drive_with_voltage(0,0);
+
+    // wait(100,msec);
+
+    // target = distanceTo(110 *  sideDef, -60);
+    // angle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm),GPS.yPosition(vex::distanceUnits::cm), 110* sideDef, -60);
+    // Chassis.turn_to_angle(angle);
+    // Chassis.drive_distance(target);
+    // Chassis.turn_to_angle(180);
+    
+    // float current = Chassis.get_left_position_in();
+    // while ((MogoOptical.hue() < MogoHue - 10 || MogoOptical.hue() > MogoHue + 10) && Chassis.get_left_position_in() > (current -25))
+    // {
+    //     Chassis.drive_with_voltage(-8,-8);
+    //     wait(20,msec);
+    // }
+    // wait(200,msec);
+    // Clamp.set(true);
+    // wait(90,msec);
+    // Chassis.drive_with_voltage(0,0);
+    // wait(200,msec);
+    // target = distanceTo(110 * sideDef ,5);
+    // fprintf(fp, "\r Target from %.2f , %.2f, running %.2f inches \n", GPS.xPosition(vex::distanceUnits::cm),GPS.yPosition(vex::distanceUnits::cm) , target );
+    // Chassis.drive_distance(target);
+
+    
+    // if(Side == RED)
+    //     Chassis.turn_to_angle(270);
+    // else
+    //     Chassis.turn_to_angle(270);
+
+        
 }
 
+
+void auto_Interaction_24()
+{
+    fprintf(fp,"\rAuton\n");
+         
+    while(1)
+    {
+        while(HoldingMogo())
+        {
+            fprintf(fp,"\r holding a mogo\n");
+            if(!MogoIsFull)
+                getRing();
+            else
+                DropMogo();
+        }
+
+        GetMogo();
+    }
+}
+
+
+#else
 
 void auto_Isolation_15()
 {
@@ -997,11 +1264,6 @@ void auto_Isolation_15()
 
 void auto_Interaction_15()
 {
-
-}
-
-void auto_Interaction_24()
-{
     fprintf(fp,"\rAuton\n");
          
     while(1)
@@ -1015,8 +1277,10 @@ void auto_Interaction_24()
                 DropMogo();
         }
 
-        GetMogo();
+        GetMobileGoal();
     }
+
 }
 
+#endif
 #pragma endregion MAIN TASKS

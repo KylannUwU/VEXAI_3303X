@@ -4,7 +4,7 @@
 static double
     Field_XY_Lim = 178.308,
     CenterXY = 0.00,
-    Scoring_Cord = 110, 
+    //Scoring_Cord = 110, 
     Path_Cord_1 = 25.4,
     Path_Cord_2 = 118.284,
     Ladder_Cord = 60.96,
@@ -227,20 +227,8 @@ int orientation(Point* p, Point* q, Point* r)
     return (val > 0) ? 1 : 2; // clock or counterclock wise
 }
 
-// bool Check_Intersects(Point* CurrentPos, Point* PointinPath, Line BarrierLine)
-// {
-//     Point Line_PointA = BarrierLine.LinePoints.first;
-//     Point Line_PointB = BarrierLine.LinePoints.second;
-//     int o1 = orientation(CurrentPos, PointinPath, &Line_PointA);
-//     int o2 = orientation(CurrentPos, PointinPath, &Line_PointB);
-//     int o3 = orientation(&Line_PointA, &Line_PointB, CurrentPos);
-//     int o4 = orientation(&Line_PointA, &Line_PointB, PointinPath);
-//     // General case
-//     if (o1 != o2 && o3 != o4)
-//         return true;
 
-//     return false; // Doesn't fall in any of the above cases
-// }
+
 
 Line Field::FindOffsetLines(Point* P1, Point* P2, bool offsettype)
 {
@@ -268,46 +256,76 @@ Line Field::FindOffsetLines(Point* P1, Point* P2, bool offsettype)
     return ParallelLine;
 }
 
-// bool Field::Check_Barrier_Intersects(Point* point, Point* inPath, bool checkoffsets = false)
-// {   
-//     Line LineA;
-//     Line LineB;
-//     bool Intersect = false;
-
-//     if(checkoffsets)
-//     {
-//     LineA = FindOffsetLines(point,inPath,true);
-//     LineB = FindOffsetLines(point,inPath,false);
-//     }
-
-//     for (int i = 0; i < Field_Obstacles.size(); i++)
-//     {
-//         for (int j = 0; j < Field_Obstacles[i]->BarrierLines.size(); j++)
-//         {
-//             if (Check_Intersects(point, inPath, Field_Obstacles[i]->BarrierLines[j]))
-//             {
-//                 return true;
-//             }
-//             if(checkoffsets)
-//             {
-//                 if(Check_Intersects(&LineA.LinePoints.first, &LineA.LinePoints.second, Field_Barriers[i]->BarrierLines[j]))
-//                 {
-//                     return true;
-//                 }
-//                 if(Check_Intersects(&LineB.LinePoints.first, &LineB.LinePoints.second, Field_Barriers[i]->BarrierLines[j]))
-//                 {
-//                     return true;
-//                 }
-//             }
-//         }
-//     }
-//     return Intersect;
-// }
-
-
-bool Field::Check_Obstacle_Intersects(Point* point, Point* inPath, bool checkoffsets = false)
+bool Field::CheckCircleIntersection(Point* lineStart, Point* lineEnd, const Point* circleCenter, double radius) 
 {
-    return true;
+    // Calculate the direction vector of the line
+    double dx = lineEnd->Xcord - lineStart->Xcord;
+    double dy = lineEnd->Ycord - lineStart->Ycord;
+    
+    // Calculate coefficients for the quadratic equation
+    double a = dx * dx + dy * dy;
+    double b = 2 * (dx * (lineStart->Xcord - circleCenter->Xcord) + 
+                     dy * (lineStart->Ycord - circleCenter->Ycord));
+    double c = (lineStart->Xcord - circleCenter->Xcord) * (lineStart->Xcord - circleCenter->Xcord) +
+               (lineStart->Ycord - circleCenter->Ycord) * (lineStart->Ycord - circleCenter->Ycord) -
+               radius * radius;
+    
+    // Calculate discriminant
+    double discriminant = b * b - 4 * a * c;
+    
+    // If discriminant is negative, there's no intersection
+    if (discriminant < 0) {
+        return false;
+    }
+    
+    // Calculate the parameters where the intersections occur
+    double t1 = (-b + sqrt(discriminant)) / (2 * a);
+    double t2 = (-b - sqrt(discriminant)) / (2 * a);
+    
+    // Check if at least one intersection point is on the line segment
+    return (t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1);
+}
+
+
+bool Field::Check_Obstacle_Intersects(Point* point, Point* inPath, bool checkoffsets) 
+{   
+    Line LineA;
+    Line LineB;
+    bool Intersect = false;
+
+    if(checkoffsets) 
+    {
+        LineA = FindOffsetLines(point, inPath, true);
+        LineB = FindOffsetLines(point, inPath, false);
+    }
+
+    // Check for intersection with field obstacles (assuming they're now circles)
+    for (int i = 0; i < Field_Obstacles.size(); i++) {
+        double obstacleRadius = 10.0; // Replace with your actual obstacle radius
+
+        // Check the main line
+        if (CheckCircleIntersection(point, inPath, Field_Obstacles[i], obstacleRadius)) 
+        {
+            return true;
+        }
+        
+        // Check offset lines if needed
+        if(checkoffsets) 
+        {
+            if(CheckCircleIntersection(&LineA.LinePoints.first, &LineA.LinePoints.second, 
+                                      Field_Obstacles[i], obstacleRadius)) 
+            {
+                return true;
+            }
+            if(CheckCircleIntersection(&LineB.LinePoints.first, &LineB.LinePoints.second, 
+                                      Field_Obstacles[i], obstacleRadius)) 
+            {
+                return true;
+            }
+        }
+    }
+    
+    return Intersect;
 }
 
 void Field::Updtae_Intake_Zone()

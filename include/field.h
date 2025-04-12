@@ -1,6 +1,5 @@
 
 #pragma once
-#include <vector>
 
 using namespace std;
 
@@ -104,7 +103,10 @@ public:
     Field(double Robot_Width, double Front_Offset, double Rear_Offset, double Arm_Offset);
     Point* Find_Scoring_Pos();
     Point* Find_Drop_Pos();
+    
+    
     //bool Check_Barrier_Intersects(Point* point, Point* inPath, bool checkoffsets);
+    bool CheckCircleIntersection(Point* lineStart, Point* lineEnd, const Point* circleCenter, double radius);
     bool Check_Obstacle_Intersects(Point* point, Point* inPath, bool checkoffsets);
     void Updtae_Intake_Zone();
     bool In_Iso_Zone(float Ball_x, float Ball_y, bool check);

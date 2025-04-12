@@ -27,7 +27,7 @@ void moveToPosition(double target_x, double target_y, double target_theta, bool 
 DETECTION_OBJECT findTarget(bool CheckSide, bool CheckIso);
 
 #if defined(MANAGER_ROBOT)
-void armControl(int angle);
+void armControl(double target);
 #endif
 
 bool HoldingMogo();
@@ -41,6 +41,8 @@ void auto_Interaction_15();
 void auto_Isolation_24();
 void auto_Isolation_15();
 
+void GetMobileGoal();
+void GrabMobileGoal(DETECTION_OBJECT Target_MG);
 
 
 DETECTION_OBJECT Multi_CheckforMogo();

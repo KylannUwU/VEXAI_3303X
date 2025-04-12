@@ -117,7 +117,7 @@ void usercontrol(void)
     if(Controller.ButtonY.pressing())
       {
         if(!Ystate)
-        Claw.set(!Claw.value());  
+        IntakePiston.set(!IntakePiston.value());  
         Ystate = true;
       }
       else
@@ -225,7 +225,7 @@ int main() {
 
   // Set up callbacks for autonomous and driver control periods.
   Competition.drivercontrol(usercontrol);
-  Competition.autonomous(auto_Interaction);
+  Competition.autonomous(auto_Interaction_15);
   //Match.event(testing_tuning,10);
   // Competition.autonomous(autonomousMain);
   this_thread::sleep_for(loop_time);
@@ -245,7 +245,7 @@ int main() {
         // fprintf(fp,"\r FindRing %.1f\n",Intake.torque(vex::torqueUnits::InLb));
         // fprintf(fp,"\r  %.1f\n",Match.time(vex::timeUnits::sec));
       //fprintf(fp,"\rLocal Map Pos Data || Azimuth:%.2f Degrees X:%.2f cm Y:%.2f cm\n",local_map.pos.az,local_map.pos.x*100,local_map.pos.y*100);
-      //fprintf(fp,"\rGPS Pos Data || Azimuth:%.2f Degrees X:%.2f cm Y:%.2f cm\n",GPS.heading(vex::rotationUnits::deg), GPS.xPosition(vex::distanceUnits::cm),GPS.yPosition(vex::distanceUnits::cm));
+      fprintf(fp,"\rGPS Pos Data || Azimuth:%.2f Degrees X:%.2f cm Y:%.2f cm\n",GPS.heading(vex::rotationUnits::deg), GPS.xPosition(vex::distanceUnits::cm),GPS.yPosition(vex::distanceUnits::cm));
       //fprintf(fp, "\r Timer %.2lu \n", Brain.Timer.system()/1000);
       
        // DETECTION_OBJECT targetmogo = findMogo();
