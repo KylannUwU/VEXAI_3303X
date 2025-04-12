@@ -106,7 +106,7 @@ public:
     
     
     //bool Check_Barrier_Intersects(Point* point, Point* inPath, bool checkoffsets);
-    bool CheckCircleIntersection(Point* lineStart, Point* lineEnd, Point* circleCenter, double radius);
+    bool CheckCircleIntersection(Point* lineStart, Point* lineEnd, const Point* circleCenter, double radius);
     bool Check_Obstacle_Intersects(Point* point, Point* inPath, bool checkoffsets);
     void Updtae_Intake_Zone();
     bool In_Iso_Zone(float Ball_x, float Ball_y, bool check);

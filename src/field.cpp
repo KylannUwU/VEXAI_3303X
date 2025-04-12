@@ -4,7 +4,7 @@
 static double
     Field_XY_Lim = 178.308,
     CenterXY = 0.00,
-    Scoring_Cord = 110, 
+    //Scoring_Cord = 110, 
     Path_Cord_1 = 25.4,
     Path_Cord_2 = 118.284,
     Ladder_Cord = 60.96,
@@ -230,8 +230,33 @@ int orientation(Point* p, Point* q, Point* r)
 
 
 
+Line Field::FindOffsetLines(Point* P1, Point* P2, bool offsettype)
+{
+    double dx = P2->Xcord - P1->Xcord;
+    double dy = P2->Ycord - P1->Ycord;
+    double Length = sqrt(pow(dx,2) + pow(dy,2));
+    double Dx = dy * Width_Offset/Length;
+    double Dy = -dx * Width_Offset/Length;
+    Point ModP1;
+    Point ModP2;
 
-bool CheckCircleIntersection(Point* lineStart, Point* lineEnd, Point* circleCenter, double radius) 
+    if(offsettype)
+    {
+        ModP1 = Point(P1->Xcord+Dx,P1->Ycord+Dy);
+        ModP2 = Point(P2->Xcord+Dx,P2->Ycord+Dy);
+    }
+    else
+    {
+        ModP1 = Point(P1->Xcord-Dx,P1->Ycord-Dy);
+        ModP2 = Point(P2->Xcord-Dx,P2->Ycord-Dy);
+    }
+
+    Line ParallelLine(ModP1,ModP2);
+
+    return ParallelLine;
+}
+
+bool Field::CheckCircleIntersection(Point* lineStart, Point* lineEnd, const Point* circleCenter, double radius) 
 {
     // Calculate the direction vector of the line
     double dx = lineEnd->Xcord - lineStart->Xcord;
@@ -261,36 +286,9 @@ bool CheckCircleIntersection(Point* lineStart, Point* lineEnd, Point* circleCent
     return (t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1);
 }
 
-Line Field::FindOffsetLines(Point* P1, Point* P2, bool offsettype)
-{
-    double dx = P2->Xcord - P1->Xcord;
-    double dy = P2->Ycord - P1->Ycord;
-    double Length = sqrt(pow(dx,2) + pow(dy,2));
-    double Dx = dy * Width_Offset/Length;
-    double Dy = -dx * Width_Offset/Length;
-    Point ModP1;
-    Point ModP2;
 
-    if(offsettype)
-    {
-        ModP1 = Point(P1->Xcord+Dx,P1->Ycord+Dy);
-        ModP2 = Point(P2->Xcord+Dx,P2->Ycord+Dy);
-    }
-    else
-    {
-        ModP1 = Point(P1->Xcord-Dx,P1->Ycord-Dy);
-        ModP2 = Point(P2->Xcord-Dx,P2->Ycord-Dy);
-    }
-
-    Line ParallelLine(ModP1,ModP2);
-
-    return ParallelLine;
-}
-
-
-
-
-bool Field::Check_Obstacle_Intersects(Point* point, Point* inPath, bool checkoffsets) {   
+bool Field::Check_Obstacle_Intersects(Point* point, Point* inPath, bool checkoffsets) 
+{   
     Line LineA;
     Line LineB;
     bool Intersect = false;
