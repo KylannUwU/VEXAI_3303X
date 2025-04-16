@@ -143,8 +143,8 @@ Point* Field::Find_Drop_Pos()
         Ay = Drop_Line->LinePoints.first.Ycord,
         Bx = Drop_Line->LinePoints.second.Xcord,
         By = Drop_Line->LinePoints.second.Ycord,
-        Pointx = GPS.x,
-        Pointy = GPS.y;
+        Pointx = GPS.xPosition(),
+        Pointy = GPS.yPosition();
     // fprintf(fp,"Line Seg Point A (%.2f, %.2f), Point B (%.2f, %.2f), Point C(%.2f, %.2f)",Ax,Ay,Bx,By,Pointx,Pointy);
     double Px = Bx - Ax;
     double Py = By - Ay;
@@ -178,8 +178,8 @@ Point* Field::Find_Scoring_Pos()
         Ay = Score_Front->LinePoints.first.Ycord,
         Bx = Score_Front->LinePoints.second.Xcord,
         By = Score_Front->LinePoints.second.Ycord,
-        Pointx = GPS.x,
-        Pointy = GPS.y;
+        Pointx = GPS.xPosition(),
+        Pointy = GPS.yPosition();
     // fprintf(fp,"Line Seg Point A (%.2f, %.2f), Point B (%.2f, %.2f), Point C(%.2f, %.2f)",Ax,Ay,Bx,By,Pointx,Pointy);
     double Px = Bx - Ax;
     double Py = By - Ay;
@@ -207,9 +207,9 @@ Point* Field::Find_Scoring_Pos()
 Point* Field::Calc_Offest_Point()
 {
     double 
-    X_pos = GPS.x,
-    Y_pos = GPS.y,
-    theta = GPS.heading;
+    X_pos = GPS.xPosition(),
+    Y_pos = GPS.yPosition(),
+    theta = GPS.heading();
 
     double dX = cos(theta) * Intake_Offset;
     double dY = sin(theta) * Intake_Offset;
@@ -330,7 +330,7 @@ bool Field::Check_Obstacle_Intersects(Point* point, Point* inPath, bool checkoff
 
 void Field::Updtae_Intake_Zone()
 {
-    Point Current(GPS.x, GPS.y);
+    Point Current(GPS.xPosition(), GPS.yPosition());
     Point* Intake_Off = Calc_Offest_Point();
     //fprintf(fp,"")
     Line Intake_OffsetA = FindOffsetLines(&Current, Intake_Off,true);

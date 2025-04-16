@@ -63,11 +63,11 @@ void auto_Isolation(void)
 
 void auto_Interaction(void) 
 {
-    GetMobileGoal();
-    while(true)
-    {
-      GetRing();
-    }
+    // GetMobileGoal();
+    // while(true)
+    // {
+    //   GetRing();
+    // }
 
     
 }
@@ -130,18 +130,19 @@ int main()
       if (counter > 15)
       {
 
-          //fprintf(fp, "\r Pos %.2f\n",  Chassis.get_left_position_in());
+        //fprintf(fp, "\r Pos %.2f\n",  Chassis.get_left_position_in());
         //fprintf(fp,"\rTimer Value: %.1f\n",Intake.torque(vex::torqueUnits::InLb));
         //fprintf(fp,"\rTimer Value: %.1f\n",Match.time(vex::timeUnits::sec));
         //fprintf(fp,"\rLocal Map Pos Data || Azimuth:%.2f Degrees X:%.2f cm Y:%.2f cm\n",local_map.pos.az,local_map.pos.x*100,local_map.pos.y*100);
-       // fprintf(fp,"\rGPS Pos Data || Azimuth:%.2f Degrees X:%.2f cm Y:%.2f cm\n",GPS.heading(vex::rotationUnits::deg), GPS.xPosition(vex::distanceUnits::cm),GPS.yPosition(vex::distanceUnits::cm));
+        // fprintf(fp,"\rGPS Pos Data || Azimuth:%.2f Degrees X:%.2f cm Y:%.2f cm\n",GPS.heading(vex::rotationUnits::deg), GPS.xPosition(vex::distanceUnits::cm),GPS.yPosition(vex::distanceUnits::cm));
         //fprintf(fp, "\r Timer %.2lu \n", Brain.Timer.system()/1000);
+        //fprintf(fp,"\rGPS Pos Data || Azimuth:%.2f Degrees X:%.2f cm Y:%.2f cm\n",GPS.heading(), GPS.xPosition(),GPS.yPosition());
 
-       // DETECTION_OBJECT targetmogo = findMogo();
-       // fprintf(fp, "\r Target Depth %.2f \n", targetmogo.depth );
+        // DETECTION_OBJECT targetmogo = findMogo();
+        // fprintf(fp, "\r Target Depth %.2f \n", targetmogo.depth );
         // Print the current match time in seconds to the controller's screen
-        //Controller1.Screen.clearLine();
-        //Controller1.Screen.print("Match Time: %d sec",  Brain.Timer.system()/1000);
+        // Controller1.Screen.clearLine();
+        // Controller1.Screen.print("Match Time: %d sec",  Brain.Timer.system()/1000);
 
         counter = 0 ;
       }

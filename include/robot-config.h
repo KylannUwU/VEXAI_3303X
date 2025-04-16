@@ -27,13 +27,14 @@ extern brain Brain;
 extern ai::jetson jetson_comms;
 extern FILE *fp;
 extern controller Controller1;
-extern Field field;
+//extern Field field;
 extern timer Match_timer;
 
 extern motor_group LeftDriveSmart;
 extern motor_group RightDriveSmart;
 extern Drive Chassis;
 extern DualGPS GPS;
+//extern gps GPS;
 
 
 //Shared Sensors

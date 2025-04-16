@@ -6,20 +6,20 @@ using namespace vex;
 
 #if defined(MANAGER_ROBOT)
 #pragma message("building for the manager")
-ai::robot_link       link( PORT15, "24in 3303X", linkType::manager );
+ai::robot_link       link( PORT16, "24in 3303X", linkType::manager );
 //24in Shared Objects
-motor leftDriveA = motor(PORT8, ratio6_1, true);  
-motor leftDriveB = motor(PORT9, ratio6_1, false);   
-motor leftDriveC = motor(PORT10, ratio6_1, true);   
-motor rightDriveA = motor(PORT1, ratio6_1, false);
-motor rightDriveB = motor(PORT2, ratio6_1, true);
-motor rightDriveC = motor(PORT3, ratio6_1, false);
-gps LeftGPS = gps(PORT6, 133, 80, mm, 90);
-gps RightGPS = gps(PORT6, 133, 80, mm, 90);
-const int32_t InertialPort = PORT17;
-const int32_t Topt_Port = PORT21;
-const int32_t Bopt_Port = PORT20;
-const int32_t MGopt_Port = PORT17;
+motor leftDriveA = motor(PORT1, ratio6_1, true);  
+motor leftDriveB = motor(PORT3, ratio6_1, false);   
+motor leftDriveC = motor(PORT4, ratio6_1, true);   
+motor rightDriveA = motor(PORT5, ratio6_1, false);
+motor rightDriveB = motor(PORT6, ratio6_1, true);
+motor rightDriveC = motor(PORT7, ratio6_1, false);
+gps LeftGPS = gps(PORT10, 133, 80, mm, 90);
+gps RightGPS = gps(PORT2, 133, 80, mm, 90);
+const int32_t InertialPort = PORT8;
+const int32_t Topt_Port = PORT9;
+const int32_t Bopt_Port = PORT11;
+const int32_t MGopt_Port = PORT12;
 double wheel_size = 2.75;
 double Robot_x_Offset = 0;
 double Intake_Offset = 0;
@@ -32,8 +32,8 @@ double Arm_Offset = 0;
 ////////////////24" Robot Specific////////////////
 //////////////////////////////////////////////////
 motor Arm = motor(PORT13, ratio6_1, true);
-motor Intake1 = motor(PORT12, ratio6_1, true);
-motor Intake2 = motor(PORT13, ratio6_1, true);
+motor Intake1 = motor(PORT14, ratio6_1, true);
+motor Intake2 = motor(PORT15, ratio6_1, true);
 motor_group Intake = motor_group(Intake1, Intake2);
 digital_out Top = digital_out(Brain.ThreeWirePort.F);
 digital_out IntakePiston = digital_out(Brain.ThreeWirePort.D);
@@ -78,7 +78,7 @@ brain Brain;
 ai::jetson  jetson_comms;
 FILE *fp = fopen("/dev/serial2","wb");
 controller Controller = controller(primary);
-Field field(Robot_x_Offset, Intake_Offset, MG_Offset, Arm_Offset);
+//Field field(Robot_x_Offset, Intake_Offset, MG_Offset, Arm_Offset);
 timer Match_timer = timer();
 
 motor_group LeftDriveSmart = motor_group(leftDriveA, leftDriveB, leftDriveC);
@@ -135,7 +135,7 @@ void vexcodeInit( void )
 
     wait(50, msec);
     Brain.Screen.clearScreen();
-    Chassis.Gyro.setHeading(GPS.heading,deg);
+    Chassis.Gyro.setHeading(GPS.heading(),deg);
 }
 
 void tuned_constants()
