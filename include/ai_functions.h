@@ -13,7 +13,7 @@
 #include "robot-config.h"
 #include "field.h"
 
-double distanceTo(double target_x, double target_y, vex::distanceUnits units);
+double distanceTo(double target_x, double target_y);
 double calculateBearing(double currX, double currY, double targetX, double targetY);
 
 void moveToPoint(Point* Target, bool FrontFacing);

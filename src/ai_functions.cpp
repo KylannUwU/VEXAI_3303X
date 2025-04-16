@@ -30,9 +30,9 @@ using namespace vex;
 
 // #pragma region MainFuncs
 
-double distanceTo(double target_x, double target_y, vex::distanceUnits units = vex::distanceUnits::in)
+double distanceTo(double target_x, double target_y)
 {
-    double distance = sqrt(pow((target_x - GPS.xPosition(units)), 2) + pow((target_y - GPS.yPosition(units)), 2));
+    double distance = sqrt(pow((target_x - GPS.x), 2) + pow((target_y - GPS.y), 2));
     return distance;
 }
 
@@ -87,8 +87,8 @@ void moveToPoint(Point* Target, bool FrontFacing = true)
         //     fprintf(fp,"\rBREAK\n");
         //     break;
         // }
-        double X_Pos = GPS.xPosition(vex::distanceUnits::cm);
-        double Y_Pos = GPS.yPosition(vex::distanceUnits::cm);
+        double X_Pos = GPS.x;
+        double Y_Pos = GPS.y;
         // Check to see if we have arrived to target 
         double threshold = pow((X_Pos - Target->Xcord), 2) + pow((Y_Pos - Target->Ycord),2);
         if(threshold <= pow(ThresholdRad, 3))
@@ -98,14 +98,14 @@ void moveToPoint(Point* Target, bool FrontFacing = true)
         }
         // Turn Function
         double intialHeading = calculateBearing(X_Pos, Y_Pos, Target->Xcord, Target->Ycord);
-        double diff = fabs(GPS.heading(vex::rotationUnits::deg) - intialHeading);
+        double diff = fabs(GPS.heading - intialHeading);
         double result = (diff <= 180.0) ? diff : 360.0 - diff;
 
         if((result > 90))
         {
             intialHeading +=  180;
         }
-        Chassis.set_heading(GPS.heading(deg));
+        Chassis.set_heading(GPS.heading);
         Chassis.turn_to_angle(intialHeading);
         //Drive Function
         Chassis.desired_heading = intialHeading;
@@ -129,7 +129,7 @@ void moveToPosition(double target_x, double target_y, double target_theta = -1, 
     Chassis.turn_max_voltage = Tspeed * 0.12;
 
     Point Target(target_x, target_y);
-    Point CurrentPoint(GPS.xPosition(distanceUnits::cm), GPS.yPosition(distanceUnits::cm));
+    Point CurrentPoint(GPS.x, GPS.y);
 
     if (true)//(!field.Check_Barrier_Intersects(&CurrentPoint, &Target, true))
     {
@@ -333,7 +333,7 @@ DETECTION_OBJECT findTarget(int type, bool isScored = false)
             {
                 if(local_map.detections[i].probability > 0.70 && local_map.detections[i].probability <= 1) 
                 {
-                    double Obj_Dist = distanceTo(local_map.detections[i].mapLocation.x*39.37, local_map.detections[i].mapLocation.y*39.37,inches);
+                    double Obj_Dist = distanceTo(local_map.detections[i].mapLocation.x*100, local_map.detections[i].mapLocation.y*100);
                     if (Obj_Dist < lowestDist)
                     {
                         target = local_map.detections[i];
@@ -402,16 +402,16 @@ void ScoreRing(DETECTION_OBJECT Target_Ring)
     float Ring_Offset = 6;
     float Tx = Target_Ring.mapLocation.x*39.37 ; 
     float Ty = Target_Ring.mapLocation.y*39.37 ;
-    double X_Pos = GPS.xPosition(vex::distanceUnits::in);
-    double Y_Pos = GPS.yPosition(vex::distanceUnits::in);
+    double X_Pos = GPS.x;
+    double Y_Pos = GPS.y;
     double targetheading = calculateBearing(X_Pos, Y_Pos, Tx, Ty);
-    double diff = fabs(GPS.heading(vex::rotationUnits::deg) - targetheading);
+    double diff = fabs(GPS.heading - targetheading);
     double result = (diff <= 180.0) ? diff : 360.0 - diff;
     if((result > 90))
     {
         targetheading +=  180;
     }
-    Chassis.set_heading(GPS.heading(deg));
+    Chassis.set_heading(GPS.heading);
     Chassis.turn_to_angle(targetheading);
     Intake.spin(fwd);
     //Drive Function
@@ -452,18 +452,18 @@ void GrabMobileGoal(DETECTION_OBJECT Target_MG)
     //fprintf(fp,"\r\n(GrabMobileGoal)Returning target: \r\nPosition:(%.2f, %.2f) \r\nClass ID:%ld \r\nProbability:%.2f \n",Target_MG.mapLocation.x, Target_MG.mapLocation.y, Target_MG.classID, Target_MG.probability );
     Clamp.set(false);
     float MG_Offset = 18;
-    float Tx = Target_MG.mapLocation.x*39.37 ; 
-    float Ty = Target_MG.mapLocation.y*39.37 ;
-    double X_Pos = GPS.xPosition(vex::distanceUnits::in);
-    double Y_Pos = GPS.yPosition(vex::distanceUnits::in);
+    float Tx = Target_MG.mapLocation.x ; 
+    float Ty = Target_MG.mapLocation.y ;
+    double X_Pos = GPS.x;
+    double Y_Pos = GPS.y;
     double targetheading = calculateBearing(X_Pos, Y_Pos, Tx, Ty);
-    double diff = fabs(GPS.heading(vex::rotationUnits::deg) - targetheading);
+    double diff = fabs(GPS.heading - targetheading);
     double result = (diff <= 180.0) ? diff : 360.0 - diff;
     if((result > 90))
     {
         targetheading +=  180;
     }
-    Chassis.set_heading(GPS.heading(deg));
+    Chassis.set_heading(GPS.heading);
     Chassis.turn_to_angle(targetheading);
     //Drive Function
     float distance = distanceTo(Tx, Ty);

@@ -1,6 +1,7 @@
 
 #include "vex.h"
 #include "field.h"
+#include "DualGPS.h"
 
 using namespace vex;
 
@@ -32,10 +33,10 @@ extern timer Match_timer;
 extern motor_group LeftDriveSmart;
 extern motor_group RightDriveSmart;
 extern Drive Chassis;
+extern DualGPS GPS;
 
 
 //Shared Sensors
-extern gps GPS;
 extern optical TopIntakeOptical;
 extern optical BtmIntakeOptical;
 extern optical MobileGoal_Optical;

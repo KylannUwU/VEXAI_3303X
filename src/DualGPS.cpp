@@ -1,9 +1,11 @@
-#include "DualGPS.h"
+#include "robot-config.h"
 
-DualGPS::DualGPS(gps &Lgps, gps &Rgps, inertial &imu)
+DualGPS::DualGPS(gps &Lgps, gps &Rgps, inertial &imu, vex::distanceUnits units)
 : Left_GPS(Lgps),
   Right_GPS(Rgps), 
-  IMU(imu)
+  IMU(imu),
+  Units(units)
+
 {
     Data_Timestamp = Brain.Timer.system();
     update_thread = new vex::thread(updateThread, static_cast<void*>(this));
@@ -24,8 +26,8 @@ int DualGPS::updateThread(void* arg)
 
 void DualGPS::updatePosition()
 {
-    float LeftX = Left_GPS.xPosition(mm), LeftY = Left_GPS.yPosition(mm), LeftH = Left_GPS.heading();
-    float RightX = Right_GPS.xPosition(mm), RightY = Right_GPS.yPosition(mm), RightH = Right_GPS.heading();
+    float LeftX = Left_GPS.xPosition(Units), LeftY = Left_GPS.yPosition(Units), LeftH = Left_GPS.heading();
+    float RightX = Right_GPS.xPosition(Units), RightY = Right_GPS.yPosition(Units), RightH = Right_GPS.heading();
 
     int LeftQual = Left_GPS.quality();
     int RightQual = Right_GPS.quality();

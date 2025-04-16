@@ -143,8 +143,8 @@ Point* Field::Find_Drop_Pos()
         Ay = Drop_Line->LinePoints.first.Ycord,
         Bx = Drop_Line->LinePoints.second.Xcord,
         By = Drop_Line->LinePoints.second.Ycord,
-        Pointx = GPS.xPosition(vex::distanceUnits::cm),
-        Pointy = GPS.yPosition(vex::distanceUnits::cm);
+        Pointx = GPS.x,
+        Pointy = GPS.y;
     // fprintf(fp,"Line Seg Point A (%.2f, %.2f), Point B (%.2f, %.2f), Point C(%.2f, %.2f)",Ax,Ay,Bx,By,Pointx,Pointy);
     double Px = Bx - Ax;
     double Py = By - Ay;
@@ -178,8 +178,8 @@ Point* Field::Find_Scoring_Pos()
         Ay = Score_Front->LinePoints.first.Ycord,
         Bx = Score_Front->LinePoints.second.Xcord,
         By = Score_Front->LinePoints.second.Ycord,
-        Pointx = GPS.xPosition(vex::distanceUnits::cm),
-        Pointy = GPS.yPosition(vex::distanceUnits::cm);
+        Pointx = GPS.x,
+        Pointy = GPS.y;
     // fprintf(fp,"Line Seg Point A (%.2f, %.2f), Point B (%.2f, %.2f), Point C(%.2f, %.2f)",Ax,Ay,Bx,By,Pointx,Pointy);
     double Px = Bx - Ax;
     double Py = By - Ay;
@@ -207,9 +207,9 @@ Point* Field::Find_Scoring_Pos()
 Point* Field::Calc_Offest_Point()
 {
     double 
-    X_pos = GPS.xPosition(vex::distanceUnits::cm),
-    Y_pos = GPS.yPosition(vex::distanceUnits::cm),
-    theta = GPS.heading(vex::rotationUnits::deg);
+    X_pos = GPS.x,
+    Y_pos = GPS.y,
+    theta = GPS.heading;
 
     double dX = cos(theta) * Intake_Offset;
     double dY = sin(theta) * Intake_Offset;
@@ -330,7 +330,7 @@ bool Field::Check_Obstacle_Intersects(Point* point, Point* inPath, bool checkoff
 
 void Field::Updtae_Intake_Zone()
 {
-    Point Current(GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm));
+    Point Current(GPS.x, GPS.y);
     Point* Intake_Off = Calc_Offest_Point();
     //fprintf(fp,"")
     Line Intake_OffsetA = FindOffsetLines(&Current, Intake_Off,true);

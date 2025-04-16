@@ -14,7 +14,8 @@ motor leftDriveC = motor(PORT10, ratio6_1, true);
 motor rightDriveA = motor(PORT1, ratio6_1, false);
 motor rightDriveB = motor(PORT2, ratio6_1, true);
 motor rightDriveC = motor(PORT3, ratio6_1, false);
-gps GPS = gps(PORT6, 133, 80, mm, 90);
+gps LeftGPS = gps(PORT6, 133, 80, mm, 90);
+gps RightGPS = gps(PORT6, 133, 80, mm, 90);
 const int32_t InertialPort = PORT17;
 const int32_t Topt_Port = PORT21;
 const int32_t Bopt_Port = PORT20;
@@ -24,6 +25,8 @@ double Robot_x_Offset = 0;
 double Intake_Offset = 0;
 double MG_Offset = 0;
 double Arm_Offset = 0;
+
+
 
 //////////////////////////////////////////////////
 ////////////////24" Robot Specific////////////////
@@ -49,7 +52,8 @@ motor leftDriveC = motor(PORT13, ratio6_1, true);
 motor rightDriveA = motor(PORT18, ratio6_1, false);
 motor rightDriveB = motor(PORT19, ratio6_1, false);
 motor rightDriveC = motor(PORT20, ratio6_1, false);
-gps GPS = gps(PORT6, 133, 80, mm, 90);
+gps LeftGPS = gps(PORT6, 133, 80, mm, 90);
+gps RightGPS = gps(PORT6, 133, 80, mm, 90);
 const int32_t InertialPort = PORT17;
 const int32_t Topt_Port = PORT21;
 const int32_t Bopt_Port = PORT20;
@@ -81,6 +85,8 @@ motor_group LeftDriveSmart = motor_group(leftDriveA, leftDriveB, leftDriveC);
 motor_group RightDriveSmart = motor_group(rightDriveA, rightDriveB, rightDriveC);
 Drive Chassis(LeftDriveSmart,RightDriveSmart,InertialPort, wheel_size, 0.75, 360);
 
+DualGPS GPS(LeftGPS, RightGPS, Chassis.Gyro, vex::distanceUnits::cm);
+
 optical TopIntakeOptical = optical(Topt_Port);
 optical BtmIntakeOptical = optical(Bopt_Port);
 optical MobileGoal_Optical = optical(MGopt_Port);
@@ -105,9 +111,11 @@ void vexcodeInit( void )
     
     Brain.Screen.setCursor(4, 1);
     wait(200, msec);
-    GPS.calibrate();
-    Brain.Screen.print("Calibrating GPS");
-    while (GPS.isCalibrating()) 
+    GPS.Left_GPS.calibrate();
+    GPS.Right_GPS.calibrate();
+
+    Brain.Screen.print("Calibrating GPS's");
+    while (GPS.Left_GPS.isCalibrating() || GPS.Right_GPS.isCalibrating()) 
     {
       wait(25, msec);
     }
@@ -127,8 +135,7 @@ void vexcodeInit( void )
 
     wait(50, msec);
     Brain.Screen.clearScreen();
-    Chassis.Gyro.setHeading(GPS.heading(),deg);
-    Chassis.set_heading(GPS.heading());
+    Chassis.Gyro.setHeading(GPS.heading,deg);
 }
 
 void tuned_constants()
