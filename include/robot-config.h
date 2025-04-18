@@ -1,6 +1,7 @@
 
 #include "vex.h"
 #include "field.h"
+#include "DualGPS.h"
 
 using namespace vex;
 
@@ -17,7 +18,7 @@ enum TeamColor
 ///////////////////////////////////
 inline int Side = RED; 
 //inline int Side = BLUE; 
-#define  MANAGER_ROBOT    1
+//#define  MANAGER_ROBOT    1
 ///////////////////////////////////
 ///////////////////////////////////
 
@@ -35,7 +36,9 @@ extern Drive Chassis;
 
 
 //Shared Sensors
-extern gps GPS;
+extern gps LGPS;
+extern gps RGPS;
+extern DualGPS GPS;
 extern optical IntakeOptical;
 extern optical MogoOptical;
 

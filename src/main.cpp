@@ -7,6 +7,8 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 #include "ai_functions.h"
+
+
 using namespace std;
 using namespace vex;
 competition Competition;
@@ -47,14 +49,15 @@ void pre_auton(void)
   {
     wait(25, msec);
   }
-  GPS.calibrate();
-  while (GPS.isCalibrating()) 
+  LGPS.calibrate();
+  RGPS.calibrate();
+  while (LGPS.isCalibrating() || RGPS.isCalibrating() ) 
   {
     wait(25, msec);
   }
   wait(50, msec);
   Brain.Screen.clearScreen();
-  Chassis.Gyro.setHeading(GPS.heading(),deg);
+  // Chassis.Gyro.setHeading(GPS.heading(),deg);
 }
 
 
@@ -234,6 +237,7 @@ int main() {
   Competition.autonomous(autonomousMain);
   //Match.event(testing_tuning,10);
   // Competition.autonomous(autonomousMain);
+
   this_thread::sleep_for(loop_time);
   int counter = 0 ;
   //Controller1.Screen.clearScreen();
@@ -263,9 +267,10 @@ int main() {
 
         counter = 0 ;
       }
+      
       // request new data    
       // NOTE: This request should only happen in a single task.    
-      jetson_comms.request_map();
+      //jetson_comms.request_map();
       // Allow other tasks to run
       this_thread::sleep_for(loop_time);
   }

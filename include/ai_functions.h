@@ -11,10 +11,6 @@
 /*----------------------------------------------------------------------------*/
 #include "robot-config.h"
 #include "field.h"
-#include <field.h>
-#include <tuple>
-#include <set>
-
 
 extern Field field;
 // Calculates the distance to a given target (x, y)

@@ -50,7 +50,12 @@ motor leftDriveC = motor(PORT13, ratio6_1, true);
 motor rightDriveA = motor(PORT18, ratio6_1, false);
 motor rightDriveB = motor(PORT19, ratio6_1, false);
 motor rightDriveC = motor(PORT20, ratio6_1, false);
-gps GPS = gps(PORT10, -10, -63.5, mm, 270);
+gps LGPS = gps(PORT10, -55, 0, mm, 270);
+gps RGPS = gps(PORT2, 55, 0, mm, 90);
+//gps GPS = gps(PORT1, 133, -80, mm, 270);
+
+
+
 const int32_t InertialPort = PORT7;
 const int32_t opt_Port = PORT9;
 const int32_t MGopt_Port = PORT8;
@@ -81,6 +86,9 @@ motor_group LeftDriveSmart = motor_group(leftDriveA, leftDriveB, leftDriveC);
 motor_group RightDriveSmart = motor_group(rightDriveA, rightDriveB, rightDriveC);
 Drive Chassis(LeftDriveSmart,RightDriveSmart,InertialPort, wheel_size, 0.75, 360);
 
+
+DualGPS GPS = DualGPS(LGPS,RGPS, Chassis.Gyro, vex::distanceUnits::cm);
+
 optical IntakeOptical = optical(opt_Port);
 optical MogoOptical = optical(MGopt_Port);
 
@@ -109,12 +117,12 @@ void vexcodeInit( void )
     
     Brain.Screen.setCursor(4, 1);
     wait(200, msec);
-    GPS.calibrate();
+    // GPS.calibrate();
     Brain.Screen.print("Calibrating GPS");
-    while (GPS.isCalibrating()) 
-    {
-      wait(25, msec);
-    }
+    // while (GPS.isCalibrating()) 
+    // {
+    //   wait(25, msec);
+    // }
 
     MogoOptical.setLightPower(100,pct);
     MogoOptical.setLight(vex::ledState::on);
