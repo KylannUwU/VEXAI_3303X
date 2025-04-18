@@ -11,7 +11,7 @@ DualGPS::DualGPS(gps &Lgps, gps &Rgps, inertial &imu, vex::distanceUnits units)
   Vx(0.0f), Vy(0.0f), total_quality(0.0f),
   Timestamp(0)
 {
-    fprintf(fp,"\rIniciando thread\n");
+    //fprintf(fp,"\rIniciando thread\n");
     update_thread = new vex::thread(updateThread, static_cast<void*>(this));
 }
 
@@ -39,12 +39,12 @@ int DualGPS::updateThread(void* arg)
 
 void DualGPS::updatePosition()
 {
-    float LeftX = 0, // Left_GPS.xPosition(Units), 
-    LeftY = 0, // Left_GPS.yPosition(Units), 
+    float LeftX = Left_GPS.xPosition(Units), 
+    LeftY = Left_GPS.yPosition(Units), 
     LeftH = Left_GPS.heading();
-    float RightX = 0,// Right_GPS.xPosition(Units), 
-    RightY = 0, // Right_GPS.yPosition(Units), 
-    RightH = 0; //Right_GPS.heading();
+    float RightX = Right_GPS.xPosition(Units), 
+    RightY = Right_GPS.yPosition(Units), 
+    RightH = Right_GPS.heading();
 
     int LeftQual = Left_GPS.quality();
     int RightQual = Right_GPS.quality();
@@ -53,25 +53,26 @@ void DualGPS::updatePosition()
     double RightWeight = normalizeQuality(RightQual);
     double totalWeight = LeftWeight + RightWeight;
     uint32_t new_timestamp = Left_GPS.timestamp();
-    fprintf(fp,"\r Variables terminadas \n");
+    //fprintf(fp,"\r Variables terminadas \n");
     if (totalWeight > 0)
-    {
-        fprintf(fp,"\r Total w es mayor a 0 \n");
-        double new_x = (LeftX * LeftWeight + RightX * RightWeight) / totalWeight;
+    {   
+       
+        
+        double new_x = ((LeftX * LeftWeight) + (RightX * RightWeight) )/ totalWeight;
         double new_y = (LeftY * LeftWeight + RightY * RightWeight) / totalWeight;
         double new_heading = (LeftH * LeftWeight + RightH * RightWeight) / totalWeight;
         double new_Vx = 0 ;
         double new_Vy = 0;
-
+        //fprintf(fp,"\r x %.2f new %.2f \n", ((LeftX * LeftWeight) + (RightX * RightWeight) ), new_x);
         // Calculate GPS-based velocity
         float deltaTime = (new_timestamp - current_timestamp)/ 1000.0; // Convert to 
-        fprintf(fp,"\r Calculando tiempo delta \n");
+        //fprintf(fp,"\r Calculando tiempo delta \n");
         if (deltaTime > 0)
         {
             new_Vx = (new_x - this->x) / deltaTime;
             new_Vy = (new_y- this->y) / deltaTime;
         }
-        fprintf(fp,"\r Nuevos valores para newVel \n");
+        //fprintf(fp,"\r Nuevos valores para newVel \n");
         {
             data_mutex.lock();
             x = new_x;
@@ -83,7 +84,7 @@ void DualGPS::updatePosition()
             Timestamp = new_timestamp;
             
         }
-        fprintf(fp,"\r Obtenido new \n");
+        //fprintf(fp,"\r Obtenido new \n");
         current_timestamp = new_timestamp;
 
         if (RightQual >= 99 && LeftQual >= 99)
@@ -91,10 +92,10 @@ void DualGPS::updatePosition()
           IMU.setHeading(new_heading, degrees);
         }
         data_mutex.unlock();
-        fprintf(fp,"\r Desbloqueando data \n");
+        //fprintf(fp,"\r Desbloqueando data \n");
     }
     data_mutex.unlock();
-    fprintf(fp,"\r Total w es menor a 0 o hilo terminado\n");
+    //fprintf(fp,"\r Total w es menor a 0 o hilo terminado\n");
 }
 
 float DualGPS::normalizeQuality(int quality) 

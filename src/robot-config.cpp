@@ -50,8 +50,8 @@ motor leftDriveC = motor(PORT13, ratio6_1, true);
 motor rightDriveA = motor(PORT18, ratio6_1, false);
 motor rightDriveB = motor(PORT19, ratio6_1, false);
 motor rightDriveC = motor(PORT20, ratio6_1, false);
-gps LGPS = gps(PORT10, -55, 0, mm, 270);
-gps RGPS = gps(PORT2, 55, 0, mm, 90);
+gps LGPS = gps(PORT10, -5.5, -8, vex::distanceUnits::cm, 270);
+gps RGPS = gps(PORT2, 5.5, -8, vex::distanceUnits::cm, 90);
 //gps GPS = gps(PORT1, 133, -80, mm, 270);
 
 

@@ -252,9 +252,9 @@ int main() {
       {
 
       //fprintf(fp,"\r Intake %.2f\n",Intake.position(degrees));
-      
-        // fprintf(fp,"\r FindRing %.1f\n",Intake.torque(vex::torqueUnits::InLb));
-        // fprintf(fp,"\r  %.1f\n",Match.time(vex::timeUnits::sec));
+      fprintf(fp,"\r newGPS val X: %.2f is %.2f + %.2f Y: %.2f is %.2f + %.2f \n", GPS.xPosition(), GPS.Left_GPS.xPosition(vex::distanceUnits::cm), GPS.Right_GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(), GPS.Left_GPS.yPosition(vex::distanceUnits::cm), GPS.Right_GPS.yPosition(vex::distanceUnits::cm)); 
+      // fprintf(fp,"\r FindRing %.1f\n",Intake.torque(vex::torqueUnits::InLb));
+      // fprintf(fp,"\r  %.1f\n",Match.time(vex::timeUnits::sec));
       //fprintf(fp,"\rLocal Map Pos Data || Azimuth:%.2f Degrees X:%.2f cm Y:%.2f cm\n",local_map.pos.az,local_map.pos.x*100,local_map.pos.y*100);
       //fprintf(fp,"\rGPS Pos Data || Azimuth:%.2f Degrees X:%.2f cm Y:%.2f cm\n",GPS.heading(vex::rotationUnits::deg), GPS.xPosition(vex::distanceUnits::cm),GPS.yPosition(vex::distanceUnits::cm));
       //fprintf(fp, "\r Timer %.2lu \n", Brain.Timer.system()/1000);

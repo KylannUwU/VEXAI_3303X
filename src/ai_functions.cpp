@@ -36,7 +36,7 @@ bool MogoIsFull = false;
 
 float distanceTo(double target_x, double target_y, vex::distanceUnits unit = vex::distanceUnits::in)
 {
-    float distance = sqrt(pow((target_x - GPS.xPosition(vex::distanceUnits::cm)), 2) + pow((target_y - GPS.yPosition(vex::distanceUnits::cm)), 2));
+    float distance = sqrt(pow((target_x - GPS.xPosition()), 2) + pow((target_y - GPS.yPosition()), 2));
     
     if(unit == vex::distanceUnits::in)
         distance = distance / 2.54;
@@ -94,8 +94,8 @@ void moveToPoint(Point* Target, bool FrontFacing = true)
         //     fprintf(fp,"\rBREAK\n");
         //     break;
         // }
-        double X_Pos = GPS.xPosition(vex::distanceUnits::cm);
-        double Y_Pos = GPS.yPosition(vex::distanceUnits::cm);
+        double X_Pos = GPS.xPosition();
+        double Y_Pos = GPS.yPosition();
         // Check to see if we have arrived to target 
         double threshold = pow((X_Pos - Target->Xcord), 2) + pow((Y_Pos - Target->Ycord),2);
         if(threshold <= pow(ThresholdRad, 3))
@@ -105,14 +105,14 @@ void moveToPoint(Point* Target, bool FrontFacing = true)
         }
         // Turn Function
         double intialHeading = calculateBearing(X_Pos, Y_Pos, Target->Xcord, Target->Ycord);
-        double diff = fabs(GPS.heading(vex::rotationUnits::deg) - intialHeading);
+        double diff = fabs(GPS.heading() - intialHeading);
         double result = (diff <= 180.0) ? diff : 360.0 - diff;
 
         if((result > 90))
         {
             intialHeading +=  180;
         }
-        Chassis.set_heading(GPS.heading(deg));
+        Chassis.set_heading(GPS.heading());
         Chassis.turn_to_angle(intialHeading);
         //Drive Function
         Chassis.desired_heading = intialHeading;
@@ -130,8 +130,8 @@ void moveToPoint(Point* Target, bool FrontFacing = true)
 void MovetoMogo(Point* Target)
 {   
         //Turn Function
-        float intialHeading = calculateBearing(GPS.xPosition(distanceUnits::cm), GPS.yPosition(distanceUnits::cm), Target->Xcord, Target->Ycord);
-        Chassis.set_heading(GPS.heading(deg));
+        float intialHeading = calculateBearing(GPS.xPosition(), GPS.yPosition(), Target->Xcord, Target->Ycord);
+        Chassis.set_heading(GPS.heading());
         Chassis.turn_to_angle(intialHeading);
         //Drive Function
         Chassis.desired_heading = intialHeading;
@@ -149,7 +149,7 @@ void moveToPosition(double target_x, double target_y, double target_theta = -1, 
     Chassis.turn_max_voltage = Tspeed * 0.12;
 
     Point Target(target_x, target_y);
-    Point CurrentPoint(GPS.xPosition(distanceUnits::cm), GPS.yPosition(distanceUnits::cm));
+    Point CurrentPoint(GPS.xPosition(), GPS.yPosition());
 
     if (!field.Check_Obstacle_Intersects(&CurrentPoint, &Target, true))
     {
@@ -383,10 +383,10 @@ void ScoreRing(DETECTION_OBJECT target)
     
     float Tx = target.mapLocation.x*100 ; 
     float Ty = target.mapLocation.y*100 ;
-    double X_Pos = GPS.xPosition(vex::distanceUnits::cm);
-    double Y_Pos = GPS.yPosition(vex::distanceUnits::cm);
+    double X_Pos = GPS.xPosition();
+    double Y_Pos = GPS.yPosition();
     double targetheading = calculateBearing(X_Pos, Y_Pos, Tx, Ty);
-    double diff = fabs(GPS.heading(vex::rotationUnits::deg) - targetheading);
+    double diff = fabs(GPS.heading() - targetheading);
     double dx = Tx - X_Pos;
     double dy = Ty - Y_Pos;
     double Totaldistance = distanceTo(Tx, Ty);
@@ -490,8 +490,8 @@ void getRing(bool ScoreWallstake = false)
                 turnItr=0;
             }
             Chassis.turn_max_voltage = 9;
-            fprintf(fp,"\rAngle to turn to %.2f Degrees\n",GPS.heading(deg) + turn_step);
-            Chassis.turn_to_angle(GPS.heading(vex::rotationUnits::deg) + turn_step);
+            fprintf(fp,"\rAngle to turn to %.2f Degrees\n",GPS.heading() + turn_step);
+            Chassis.turn_to_angle(GPS.heading() + turn_step);
             turnItr=turnItr+1;
             vex::wait(500,msec);
             target = findTarget(type);
@@ -595,10 +595,10 @@ void GrabMobileGoal(DETECTION_OBJECT Target_MG)
     float MG_Offset = 18;
     float Tx = Target_MG.mapLocation.x*100 ; 
     float Ty = Target_MG.mapLocation.y*100 ;
-    double X_Pos = GPS.xPosition(vex::distanceUnits::cm);
-    double Y_Pos = GPS.yPosition(vex::distanceUnits::cm);
+    double X_Pos = GPS.xPosition();
+    double Y_Pos = GPS.yPosition();
     double targetheading = calculateBearing(X_Pos, Y_Pos, Tx, Ty);
-    double diff = fabs(GPS.heading(vex::rotationUnits::deg) - targetheading);
+    double diff = fabs(GPS.heading() - targetheading);
     double dx = Tx - X_Pos;
     double dy = Ty - Y_Pos;
     double Totaldistance = distanceTo(Tx, Ty);
@@ -674,7 +674,7 @@ void GetMogo()
             #endif
             fprintf(fp, "\r MOGO FOUNDED\n");
             //Chassis.set_heading(GPS.heading(deg));
-             double TargetAngle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm), target.mapLocation.x * 100, target.mapLocation.y * 100);
+             double TargetAngle = calculateBearing(GPS.xPosition(), GPS.yPosition(), target.mapLocation.x * 100, target.mapLocation.y * 100);
             // double targetDistance = distanceTo(target.mapLocation.x * 100, target.mapLocation.y* 100);
             // Chassis.turn_to_angle(TargetAngle);
             // Chassis.drive_distance(targetDistance-mogoOffset);
@@ -707,8 +707,8 @@ void GetMogo()
             //fprintf(fp,"\rSeanning for ball....\n");
             Chassis.turn_max_voltage = 9;
                  
-            fprintf(fp,"\rAngle to turn to %.2f Degrees\n",GPS.heading(deg) + turn_step);
-            Chassis.turn_to_angle(GPS.heading(vex::rotationUnits::deg) + turn_step);
+            fprintf(fp,"\rAngle to turn to %.2f Degrees\n",GPS.heading() + turn_step);
+            Chassis.turn_to_angle(GPS.heading() + turn_step);
             turnItr=turnItr+1;
             vex::wait(500,msec);
             
@@ -976,8 +976,8 @@ void DropMogo()
     
     fprintf(fp, "\r Closest pont is %.2f , %.2f \n", closestPoint.Xcord, closestPoint.Ycord);
     
-    Chassis.set_heading(GPS.heading(vex::rotationUnits::deg));
-    double angle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm),GPS.yPosition(vex::distanceUnits::cm),closestPoint.Xcord,closestPoint.Ycord);
+    Chassis.set_heading(GPS.heading());
+    double angle = calculateBearing(GPS.xPosition(),GPS.yPosition(),closestPoint.Xcord,closestPoint.Ycord);
     double distance = lowestDist;
     int backOffset = 25;
     Chassis.turn_to_angle(angle+180);
@@ -1072,7 +1072,7 @@ void auto_Isolation_24()
     else
     Chassis.turn_to_angle(225);
     Chassis.drive_distance(20);
-    // angle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm),GPS.yPosition(vex::distanceUnits::cm), 90* sideDef, -90);
+    // angle = calculateBearing(GPS.xPosition(),GPS.yPosition(), 90* sideDef, -90);
     // Chassis.turn_to_angle(angle);   
     // target = distanceTo(95 *  sideDef, -95);
     // Chassis.drive_distance(target);
@@ -1176,7 +1176,7 @@ void auto_Isolation_24()
     // wait(100,msec);
 
     // target = distanceTo(110 *  sideDef, -60);
-    // angle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm),GPS.yPosition(vex::distanceUnits::cm), 110* sideDef, -60);
+    // angle = calculateBearing(GPS.xPosition(),GPS.yPosition(), 110* sideDef, -60);
     // Chassis.turn_to_angle(angle);
     // Chassis.drive_distance(target);
     // Chassis.turn_to_angle(180);
@@ -1193,7 +1193,7 @@ void auto_Isolation_24()
     // Chassis.drive_with_voltage(0,0);
     // wait(200,msec);
     // target = distanceTo(110 * sideDef ,5);
-    // fprintf(fp, "\r Target from %.2f , %.2f, running %.2f inches \n", GPS.xPosition(vex::distanceUnits::cm),GPS.yPosition(vex::distanceUnits::cm) , target );
+    // fprintf(fp, "\r Target from %.2f , %.2f, running %.2f inches \n", GPS.xPosition(),GPS.yPosition() , target );
     // Chassis.drive_distance(target);
 
     
@@ -1240,7 +1240,7 @@ void auto_Isolation_15()
     RightDriveSmart.resetPosition();
     LeftDriveSmart.setStopping(brake);
     RightDriveSmart.setStopping(brake); 
-    Chassis.set_heading(GPS.heading(vex::rotationUnits::deg));
+    Chassis.set_heading(GPS.heading());
     Chassis.drive_with_voltage(11,11);
   
     double currentPos = Chassis.get_left_position_in(); 
@@ -1308,12 +1308,12 @@ void auto_Isolation_15()
     
     {
       fprintf(fp, "\r MOGO VIABLE \n");
-      Chassis.set_heading(GPS.heading(deg));
-      double TargetAngle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm), target.mapLocation.x * 100, target.mapLocation.y * 100);
+      Chassis.set_heading(GPS.heading());
+      double TargetAngle = calculateBearing(GPS.xPosition(), GPS.yPosition(), target.mapLocation.x * 100, target.mapLocation.y * 100);
       double desiredAngle = TargetAngle + 180; 
       fprintf(fp, "\r Target in %.2f , %.2f going from %.2f , %.2f\n",
               target.mapLocation.x * 100, target.mapLocation.y * 100,
-              GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm));
+              GPS.xPosition(), GPS.yPosition());
       fprintf(fp, "\r TURNING TO MOGO FROM %.2f to %.2f\n", TargetAngle, desiredAngle);
       Chassis.turn_to_angle(desiredAngle);
       fprintf(fp, "\r turning to %.2f \n", desiredAngle);
@@ -1346,12 +1346,12 @@ void auto_Isolation_15()
     mogoY = target.mapLocation.y * 100; 
     if(mogoinside)
     {
-    Chassis.set_heading(GPS.heading(deg));
-    double TargetAngle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm), target.mapLocation.x * 100, target.mapLocation.y * 100);
+    Chassis.set_heading(GPS.heading());
+    double TargetAngle = calculateBearing(GPS.xPosition(), GPS.yPosition(), target.mapLocation.x * 100, target.mapLocation.y * 100);
     double desiredAngle = TargetAngle + 180; 
     fprintf(fp, "\r Target in %.2f , %.2f going from %.2f , %.2f\n",
             target.mapLocation.x * 100, target.mapLocation.y * 100,
-            GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm));
+            GPS.xPosition(), GPS.yPosition());
     fprintf(fp, "\r TURNING TO MOGO FROM %.2f to %.2f\n", TargetAngle, desiredAngle);
     Chassis.turn_to_angle(desiredAngle);
     fprintf(fp, "\r turning to %.2f \n", desiredAngle);
