@@ -7,7 +7,7 @@ brain Brain;
 
 #if defined(MANAGER_ROBOT)
 #pragma message("building for the manager")
-ai::robot_link       link( PORT15, "24in 3303X", linkType::manager );
+ai::robot_link       link( PORT19, "24in 3303X", linkType::manager );
 //24in Shared Objects
 motor leftDriveA = motor(PORT8, ratio6_1, true);  
 motor leftDriveB = motor(PORT9, ratio6_1, false);   
@@ -15,7 +15,8 @@ motor leftDriveC = motor(PORT10, ratio6_1, true);
 motor rightDriveA = motor(PORT1, ratio6_1, false);
 motor rightDriveB = motor(PORT2, ratio6_1, true);
 motor rightDriveC = motor(PORT3, ratio6_1, false);
-gps GPS = gps(PORT6, 133, 80, mm, 90);
+gps LGPS = gps(PORT15, -5.5, -8, vex::distanceUnits::cm, 270);
+gps RGPS = gps(PORT4, 5.5, -8, vex::distanceUnits::cm, 90);
 const int32_t InertialPort = PORT17;
 const int32_t opt_Port = PORT15;
 const int32_t MGopt_Port = PORT14;
@@ -31,7 +32,7 @@ double Arm_Offset = 0;
 motor Arm = motor(PORT11, ratio6_1, true);
 motor Intake1 = motor(PORT12, ratio6_1, true);
 motor Intake2 = motor(PORT13, ratio6_1, true);
-motor_group Intake = motor_group(Intake1, Intake2);
+
 rotation ArmRotation = rotation(PORT16, true);
 digital_out Top = digital_out(Brain.ThreeWirePort.F);
 digital_out IntakePiston = digital_out(Brain.ThreeWirePort.D);
@@ -57,7 +58,7 @@ gps RGPS = gps(PORT2, 5.5, -8, vex::distanceUnits::cm, 90);
 
 
 const int32_t InertialPort = PORT7;
-const int32_t opt_Port = PORT9;
+const int32_t opt_Port = PORT6;
 const int32_t MGopt_Port = PORT8;
 double wheel_size = 3.25;
 double Robot_x_Offset = 10;
@@ -68,7 +69,9 @@ double Arm_Offset = 2;
 //////////////////////////////////////////////////
 ////////////////15" Robot Specific////////////////
 //////////////////////////////////////////////////
-motor Intake = motor(PORT4, ratio6_1, true);
+motor Intake1 = motor(PORT4, ratio6_1, true);
+motor Intake2 = motor(PORT3, ratio6_1, true);
+
 #endif
 
 //////////////////////////////////////////////////
@@ -82,6 +85,8 @@ controller Controller = controller(primary);
 Field field(Robot_x_Offset, Intake_Offset, MG_Offset, Arm_Offset);
 timer Match_timer = timer();
 
+
+motor_group Intake = motor_group(Intake1, Intake2);
 motor_group LeftDriveSmart = motor_group(leftDriveA, leftDriveB, leftDriveC);
 motor_group RightDriveSmart = motor_group(rightDriveA, rightDriveB, rightDriveC);
 Drive Chassis(LeftDriveSmart,RightDriveSmart,InertialPort, wheel_size, 0.75, 360);

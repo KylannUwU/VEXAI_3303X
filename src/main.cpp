@@ -151,8 +151,10 @@ bool Starting = true;
 
 void testing_tuning()
 {
-  fprintf(fp, "\r MOGO VIABLE \n");
-
+  Clamp.set(true);
+  wait(300,msec);
+  task ic15(IntakeControl);
+  //purePursuit();
 }
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
@@ -234,12 +236,13 @@ int main() {
 
   // Set up callbacks for autonomous and driver control periods.
   Competition.drivercontrol(usercontrol);
-  Competition.autonomous(autonomousMain);
+  Competition.autonomous(testing_tuning);
   //Match.event(testing_tuning,10);
   // Competition.autonomous(autonomousMain);
 
   this_thread::sleep_for(loop_time);
   int counter = 0 ;
+  //thread t2(IntakeControl);
   //Controller1.Screen.clearScreen();
   while(1) 
   {
@@ -251,8 +254,9 @@ int main() {
       if (counter > 15)
       {
 
-      //fprintf(fp,"\r Intake %.2f\n",Intake.position(degrees));
-      fprintf(fp,"\r newGPS val X: %.2f is %.2f + %.2f Y: %.2f is %.2f + %.2f \n", GPS.xPosition(), GPS.Left_GPS.xPosition(vex::distanceUnits::cm), GPS.Right_GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(), GPS.Left_GPS.yPosition(vex::distanceUnits::cm), GPS.Right_GPS.yPosition(vex::distanceUnits::cm)); 
+      
+
+      //fprintf(fp,"\r newGPS val X: %.2f is %.2f + %.2f Y: %.2f is %.2f + %.2f \n", GPS.xPosition(), GPS.Left_GPS.xPosition(vex::distanceUnits::cm), GPS.Right_GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(), GPS.Left_GPS.yPosition(vex::distanceUnits::cm), GPS.Right_GPS.yPosition(vex::distanceUnits::cm)); 
       // fprintf(fp,"\r FindRing %.1f\n",Intake.torque(vex::torqueUnits::InLb));
       // fprintf(fp,"\r  %.1f\n",Match.time(vex::timeUnits::sec));
       //fprintf(fp,"\rLocal Map Pos Data || Azimuth:%.2f Degrees X:%.2f cm Y:%.2f cm\n",local_map.pos.az,local_map.pos.x*100,local_map.pos.y*100);

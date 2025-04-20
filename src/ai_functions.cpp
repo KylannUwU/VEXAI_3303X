@@ -32,6 +32,7 @@ bool MogoIsFull = false;
 
 
 
+
 #pragma region MainFuncs
 
 float distanceTo(double target_x, double target_y, vex::distanceUnits unit = vex::distanceUnits::in)
@@ -359,15 +360,15 @@ DETECTION_OBJECT findTarget(int type, bool isScored = false)
 
 
 
-void IntakeOn()
-{
-    while(1)
-    {
-        if(!Intake.isSpinning())
-            Intake.spin(fwd);
-        wait(20,msec);
-    }
-}
+// void IntakeOn()
+// {
+//     while(1)
+//     {
+//         if(!Intake.isSpinning())
+//             Intake.spin(fwd);
+//         wait(20,msec);
+//     }
+// }
 
 
 bool Act = false;
@@ -399,8 +400,8 @@ void ScoreRing(DETECTION_OBJECT target)
     
     fprintf(fp,"\r Original pos %.2f, %.2f, new pos %.2f, %.2f \n", Tx, Ty, newX, newY);
     
-    if(!Act)
-        thread t1(IntakeControl);
+    // if(!Act)
+    //     thread t3(IntakeControl);
     // Intake.spin(fwd,100,pct);
     moveToPosition(Tx,Ty,-1);
    // double angle = calculateBearing(GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(vex::distanceUnits::cm),target.mapLocation.x* 100,target.mapLocation.y* 100 );
@@ -730,223 +731,253 @@ bool IntakeActivation = false;
 
 
 
+bool isAllianceRing()
+{
+    int hue;
+    bool isValidRing = false;
+
+    if(Side == RED)
+        hue = 10;
+        
+    else
+        hue = 180;
+    
+
+
+    if(IntakeOptical.isNearObject())
+    {
+        int currentHue = IntakeOptical.hue();
+        int diff = abs(currentHue - hue);
+        diff = std::min(diff, 360 - diff);  
+
+        if (diff <= 30)
+            isValidRing = true;
+        else
+            isValidRing = false;
+        wait(20,msec);
+    }
+    else
+    isValidRing = false;
+
+    //fprintf(fp,"\r Ring is %d,\n", isValidRing);
+    return isValidRing;
+}
+
+
+bool colorSort()
+{
+    int hue;
+    bool isWrongColor = false;
+    int currentHue = IntakeOptical.hue();
+    
+    if(Side == RED)
+        hue = 220;
+    else
+        hue = 10;
+
+    int diff = abs(currentHue - hue);
+    diff = std::min(diff, 360 - diff);  
+
+    if(diff < 30 && IntakeOptical.isNearObject())
+        isWrongColor = true;
+    fprintf(fp,"\r diff is %d\n", diff);
+    return isWrongColor;
+}
+
+
+
+int counterTask(int counter)
+{
+    static bool counterState = false;
+
+    if(isAllianceRing())
+    {
+        if(!counterState)
+        {
+            counterState = true;
+            counter = counter + 1 ;
+            fprintf(fp,"\r RING DETECTADO, COUNTER ES %d \n",counter);
+        }
+    }
+
+    else
+    {
+        if(counterState) 
+            counterState = false;
+    }
+    return counter;
+}
+
+
+
+bool isStuck(int threshold)
+{
+    static double lastPosition = 0;
+    static int stuckFrames = 0;
+
+    double currentPosition = Intake.position(deg);
+    double efficiency = Intake.efficiency();
+    double diff = abs(currentPosition - lastPosition);
+
+
+ //   fprintf(fp,"\r diff %.2f eff %.2f lastpos %.2f\n", diff, efficiency, lastPosition);
+
+    if(diff < threshold && efficiency < 30)
+        stuckFrames++;
+    
+    else
+        stuckFrames = 0;
+
+    lastPosition = currentPosition;
+
+    return stuckFrames > 25;
+}
+
 
 int IntakeControl()
 {
-    Act = true;
-    IntakeActivation = true;
-    int
-     hue_detect_pos = 0,
-     Timeout = 0,
-     LastPosition = 0,
-     attempDelay = 0,
-     desiredHue,
-     countHue,
-     count = 0;
+         
     #ifdef MANAGER_ROBOT    
-    double Intakethreshold = 400;
+    double Intakethreshold = 200;
     #else
-    double Intakethreshold = 50;
+    double Intakethreshold = 30;
     #endif
-    static bool 
-        isStuck = false,
-        countState = false;
-     
-    if(Side == RED)
-    {
-      desiredHue = 115;
-      countHue = 30;
-    }
-    else
-    {
-        desiredHue = 30;
-        countHue = 115;
-    }  
     
-      bool RingHue = false;
+    // bool isActivated = true;
 
+    int counter = 0,
+    intakecounter = 0;
+    bool
+        counterState = false,
+        sortState = false,
+        posState;
+
+    double 
+        posCounter,
+        lastPos;
 
     while(1)
-    {        
+    {
         
-        wait(100,msec);
-        
-
-        attempDelay ++;
-        int current_pos = Intake.position(deg);
-
-        if(Side == RED)
-        RingHue = IntakeOptical.hue() > desiredHue;
-
-        else
-        RingHue = IntakeOptical.hue() < desiredHue;
-            
-        
-        if(!isStuck)
+        while (counter < 6 && counter != -1)
         {
-           
+            
     
-            if (RingHue) 
-            { 
-                #ifdef MANAGER_ROBOT    
-                Top.set(true);
-
-                if (hue_detect_pos == 0) 
-                hue_detect_pos = current_pos;
-
-                if (current_pos - hue_detect_pos <= 235) 
-                    Intake.spin(fwd,100,pct); 
-                else 
-                {
-                    armControl(200);
-                    Top.set(false);
-                    armControl(250);
-                }
-
-                #else
-                if (hue_detect_pos == 0) 
-                hue_detect_pos = current_pos;
                 
+            
 
-                if (current_pos - hue_detect_pos <= 235) 
-                    Intake.spin(fwd,100,pct); 
-                
 
-                else 
-                {
-                    Intake.spin(fwd,0,pct); 
-                    wait(300,msec);
-                }
-                #endif
+                #ifdef MANAGER_ROBOT
+            if(!isStuck(Intakethreshold))
+            {
+                if(colorSort())
+                    sortState = true;
                 
-            } 
-            else
-            {   
-                if(countHue)
+                if(!sortState)
+                    Intake.spin(fwd,100,pct);
+        
+                else
                 {
-                    if(!countState)
+                    if(!Top.value())
+                        Top.set(true);
+                    
+                    Intake.spin(fwd,100,pct);
+                    if(isAllianceRing())
                     {
-                        countState = true;
-                        count ++;
-                        fprintf(fp,"\rRings on MOGO: %d \n",count);
+                        wait(600,msec);
+                        Top.set(false);
+                        sortState = false;
                     }
 
                 }
-                else
-                countState = false;
+               
+        
+            }
+            
+        
+            else
+            {
+                Intake.spin(vex::directionType::rev, 100,pct);
+                wait(400,msec);
+            }
+
+            #else
+            if(!isStuck(Intakethreshold))
+            {
                 
-                hue_detect_pos = 0;
-                if(IntakeActivation)
+                if(colorSort())
+                    sortState = true;
+                
+                if(!sortState)
                     Intake.spin(fwd,100,pct);
+        
                 else
+                {
+                    lastPos = Intake.position(deg);
+                    Intake.spin(fwd,100,pct);
+                    while( abs(Intake.position(deg) - lastPos) < 70)
+                        wait(20,msec);
+
                     Intake.stop();
-            }            
+                    wait(2000,msec);
+                    sortState = false;
+
+                }
+               
+        
+            }
+            
+        
+            else
+            {
+                Intake.spin(vex::directionType::rev, 100,pct);
+                wait(400,msec);
+            }
+            #endif
+            counter = counterTask(counter);         
+            wait(20,msec);   
         }
-        else
+        
+
+
+
+
+        if(counter == 6)
         {
-                Intake.spin(vex::directionType::rev, 100, pct);
-                wait(400, msec);
-                isStuck = false;
-                Timeout = 0;
-                Intake.spin(fwd,100,pct);
-            
+            wait(800,msec);
+            counter = -1;
+            MogoIsFull = true;
         }
         
-        if(Timeout > 5)
-            isStuck = true;
-
-        if(attempDelay == 10)
-        { 
-
-        fprintf(fp,"\r Pos %.2f , Last %.2f , Timeout %d  \n", Intake.position(deg), LastPosition, Timeout);
-        
-        if(abs(Intake.position(deg) - LastPosition) < Intakethreshold && !RingHue )
-            Timeout ++;
-
-        else
-            Timeout = 0;
-            
-        LastPosition = Intake.position(deg);
-        attempDelay = 0;
-        
+        wait(20,msec);
+        Intake.stop();
+    
     }
-
-
-    if(count == 6)
-    {
-        MogoIsFull = true;
-        count = 0;
-    }
-
-    }
-    return 0;
 }
     
 
 
 
-int trackingMogo()
-{
-  
-  while(1)
-  {
-    DETECTION_OBJECT targetmogo = findTarget(0);
-    wait(20,msec);
-  }
-  return 0;
-}
-
-
-DETECTION_OBJECT Multi_CheckforMogo()
-{
-
-    float mogoX;
-    float mogoY;
-
-    bool mogoChecked = false;
-    int attemps = 0;
-    DETECTION_OBJECT target;
-    while (!mogoChecked)
-    {
-        attemps ++;
-        target = findTarget(0);
-
-        wait(100,msec);
-        fprintf(fp, "\r MOGO ATEMP %d, founded at %.2f, %.2f  \n", attemps, target.mapLocation.x, target.mapLocation.y );
-        if (target.mapLocation.x < 1)
-        {
-            fprintf(fp, "\r MOGO CLOSE AT %.2f, %.2f  \n", target.mapLocation.x, target.mapLocation.y );
-            mogoChecked = true;  
-            mogoX = target.mapLocation.x;
-            mogoY = target.mapLocation.y;
-        }
-        else
-        {
-            if(attemps >= 3)
-            {
-            mogoChecked = true;
-            fprintf(fp, "\r MOGO is too far at %.2f, %.2f  \n", target.mapLocation.x, target.mapLocation.y);
-            mogoChecked = true;  
-            mogoX = 1;
-            mogoY = 1;
-            break;
-            }
-        }
-        wait(100,msec);
-    }
-    return target;
-}
 
 bool HoldingMogo()
 {
     bool Mogo = false;
-    if(MogoOptical.hue() > 50 &&  MogoOptical.hue() < 70)
+    int counter = 0;
+
+    while(counter < 5)
     {
-            fprintf(fp, "\r HOLDING MOGO\n");
-            Mogo = true;
+        if(MogoOptical.hue() > 50 &&  MogoOptical.hue() < 70)
+        {
+                fprintf(fp, "\r HOLDING MOGO\n");
+                Mogo = true;
+                break;
+        }
+        else
+        {
+            fprintf(fp, "\rNO MOGO, hue is %d \n", MogoOptical.hue());
+            counter = counter + 1;
+        }
     }
-    else
-        fprintf(fp, "\rNO MOGO, hue is %d \n", MogoOptical.hue());
     return Mogo;
 
 }
@@ -1212,15 +1243,16 @@ void auto_Interaction_24()
     while(1)
     {
         
-        GetMobileGoal();
+        
         while(HoldingMogo)
         {
             fprintf(fp,"\r holding a mogo\n");
-            // if(!MogoIsFull)
+            if(!MogoIsFull)
                 getRing();
-            // else
-            //     DropMogo();
+             else
+                 DropMogo();
         }
+        GetMobileGoal();
         wait(1000,msec);
 
 

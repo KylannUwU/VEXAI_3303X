@@ -2,6 +2,8 @@
 #include "vex.h"
 #include "field.h"
 #include "DualGPS.h"
+#include "pathcontrol.h"
+
 
 using namespace vex;
 
@@ -48,17 +50,18 @@ extern digital_out Clamp;
 
 extern controller Controller;
 
+extern motor_group Intake;
 
 
 #if defined(MANAGER_ROBOT)
-extern motor_group Intake;
+
 extern motor Arm;
 extern digital_out Top;
 extern digital_out IntakePiston;
 extern digital_out Claw;
 extern rotation ArmRotation;
 #else
-extern motor Intake;
+
 #endif
 
 
