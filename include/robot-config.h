@@ -50,6 +50,10 @@ extern digital_out Clamp;
 
 extern controller Controller;
 
+
+extern motor Intake1;
+extern motor Intake2;
+
 extern motor_group Intake;
 
 

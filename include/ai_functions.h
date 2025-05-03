@@ -18,7 +18,7 @@ float distanceTo(double target_x, double target_y,vex::distanceUnits unit);
 double calculateBearing(double currX, double currY, double targetX, double targetY);
 void moveToPoint(Point* Target, bool FrontFacing);
 void MovetoRing(Point* Target);
-void moveToPosition(double target_x, double target_y, double target_theta, bool GetBall = false, int Dspeed = 100, int Tspeed = 100);
+void moveToPosition(double target_x, double target_y, double target_theta, bool GetBall = false, bool GetRing = true, int Dspeed = 100, int Tspeed = 100);
 
 DETECTION_OBJECT findTarget(bool CheckSide, bool CheckIso);
 
@@ -28,6 +28,7 @@ void armControl(double target);
 
 bool HoldingMogo();
 void GetMogo();
+void DropMogo();
 int IntakeControl();
 void IntakeOn();
 
@@ -40,6 +41,6 @@ void auto_Isolation_15();
 void GetMobileGoal();
 void GrabMobileGoal(DETECTION_OBJECT Target_MG);
 
-
+std::vector<std::pair<double, double>> getPathToRings();
 DETECTION_OBJECT Multi_CheckforMogo();
 DETECTION_OBJECT findTarget(int Type, bool isScored);

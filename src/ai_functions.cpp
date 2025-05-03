@@ -144,7 +144,7 @@ void MovetoMogo(Point* Target)
 }
 
 // Method that moves to a given (x,y) position and a desired target theta to finish movement facing in cm
-void moveToPosition(double target_x, double target_y, double target_theta = -1, bool GetMobile, int Dspeed, int Tspeed)
+void moveToPosition(double target_x, double target_y, double target_theta = -1, bool GetMobile, bool GetRing, int Dspeed, int Tspeed)
 {
     Chassis.drive_max_voltage = Dspeed * 0.12;
     Chassis.turn_max_voltage = Tspeed * 0.12;
@@ -156,14 +156,14 @@ void moveToPosition(double target_x, double target_y, double target_theta = -1, 
     {
         fprintf(fp,"\rNo Barrier Intersection found moving to point\n");
         
-        // if(GetMobile)
-        // {
-        //     MovetoMogo(&Target);
-        // }
-        // else
-        // {
+        if(GetMobile)
+        {
+            MovetoMogo(&Target);
+        }
+        else
+        {
             moveToPoint(&Target);
-        //}
+        }
     }
     else
     {
@@ -187,6 +187,11 @@ void moveToPosition(double target_x, double target_y, double target_theta = -1, 
                 }
                 else
                 {
+                    if(GetRing)
+                    {   
+                        double angle = calculateBearing(GPS.xPosition(), GPS.yPosition(), Path2Follow.PathPoints[i]->Xcord, Path2Follow.PathPoints[i]->Ycord);
+                        Chassis.turn_to_angle(angle);
+                    }
                     moveToPoint(Path2Follow.PathPoints[i]);
                 }
             }
@@ -370,7 +375,20 @@ DETECTION_OBJECT findTarget(int type, bool isScored = false)
 //     }
 // }
 
+void ScoreRings()
+{
+    auto path = getPathToRings();
+    task ic(IntakeControl);
+    for (const auto& point : path) 
+            {
+               
+                
+                fprintf(fp,"Moviendose a: (%.2f, %.2f)\n", point.first, point.second);
+                moveToPosition(point.first, point.second,-1,false,true,60,60);
+                Chassis.drive_distance(3);
+        }
 
+}
 bool Act = false;
 
 void ScoreRing(DETECTION_OBJECT target)
@@ -503,7 +521,7 @@ void getRing(bool ScoreWallstake = false)
  
     Top.set(true);
     #endif
-    ScoreRing(target);
+    ScoreRings();
     #ifdef MANAGER_ROBOT
     
     if(ScoreWallstake)
@@ -529,8 +547,7 @@ void armControl(double target) {
     while (!done) {
         double encoderValue = ArmRotation.angle(vex::rotationUnits::deg);
         double error = target - encoderValue;
-        fprintf(fp, "\r Target: %.2f Current: %.2f Error: %.2f \n",
-                        target,     encoderValue    ,error );
+        
         if (abs(error) <= tolerance) {
             Arm.stop(hold);
             done = true; 
@@ -543,9 +560,10 @@ void armControl(double target) {
 
         if (output > 100) output = 100;
         else if (output < -100) output = -100;
+        fprintf(fp, "\r Target: %.2f Current: %.2f Error: %.2f Output: %.2f \n",
+            target,     encoderValue    ,error  ,output );
 
-
-        Arm.spin(fwd, static_cast<int>(-output), pct);
+        Arm.spin(fwd, static_cast<int>(output), pct);
 
         previousErrorLB = error;
 
@@ -593,7 +611,7 @@ void GrabMobileGoal(DETECTION_OBJECT Target_MG)
     //fprintf(fp,"\r\n(GrabMobileGoal)Returning target: \r\nPosition:(%.2f, %.2f) \r\nClass ID:%ld \r\nProbability:%.2f \n",Target_MG.mapLocation.x, Target_MG.mapLocation.y, Target_MG.classID, Target_MG.probability );
     Clamp.set(false);
     
-    float MG_Offset = 18;
+    float MG_Offset = 10;
     float Tx = Target_MG.mapLocation.x*100 ; 
     float Ty = Target_MG.mapLocation.y*100 ;
     double X_Pos = GPS.xPosition();
@@ -617,7 +635,7 @@ void GrabMobileGoal(DETECTION_OBJECT Target_MG)
     {
         targetheading +=  180;
     }
-    moveToPosition(newX,newY,-1,true);
+    moveToPosition(Tx,Ty,-1,true);
     // Chassis.set_heading(GPS.heading(deg));
     // Chassis.turn_to_angle(targetheading);
     // //Drive Function
@@ -640,7 +658,7 @@ void GrabMobileGoal(DETECTION_OBJECT Target_MG)
         {
             detectMG = true;
         }
-        if(StartTime - currentTime > 5000)
+        if(abs(StartTime - currentTime) > 5000)
             detectMG = true;
     }
     fprintf(fp,"\r Clamping mogo\n");
@@ -722,6 +740,88 @@ void GetMogo()
 }
 
 
+std::vector<DETECTION_OBJECT> findAllTargets(int type, bool isScored = false)
+{
+    std::vector<DETECTION_OBJECT> targets;
+    static AI_RECORD local_map;
+    jetson_comms.get_data(&local_map);
+
+    if (type != 0) {
+        isScored = false;
+    }
+
+    findScored(&local_map, isScored); 
+
+    if (local_map.detectionCount > 0) {
+        //fprintf(fp, "\r\nNumber of objects in local map: %ld ", local_map.detectionCount);
+        for (int i = 0; i < local_map.detectionCount; i++) {
+            DETECTION_OBJECT obj = local_map.detections[i];
+
+            if (obj.classID == type && obj.probability > 0.70 && obj.probability <= 1) {
+                // Filtro de posiciones "válidas"
+                if (abs(obj.mapLocation.x) <= 1.75 && abs(obj.mapLocation.y) <= 1.75) {
+                   // fprintf(fp, "\r\n Objeto valido: (%.2f, %.2f), clase: %ld, prob: %.2f", 
+                    //        obj.mapLocation.x, obj.mapLocation.y, obj.classID, obj.probability);
+                    targets.push_back(obj);
+                } else {
+
+                }
+            }
+        }
+    }
+
+    return targets;
+
+
+}
+
+
+
+std::vector<std::pair<double, double>> getPathToRings() {
+   
+    int type = (Side == RED) ? 1 : 2;
+   
+    std::vector<DETECTION_OBJECT> rings = findAllTargets(type);
+    
+    // Ordenar por distancia al punto actual
+    std::sort(rings.begin(), rings.end(), [=](const DETECTION_OBJECT& a, const DETECTION_OBJECT& b) {
+        double distA = distanceTo( a.mapLocation.x*100, a.mapLocation.y*100);
+        double distB = distanceTo( b.mapLocation.x*100, b.mapLocation.y*100);
+        return distA < distB;
+    });
+
+    // Limitar a máximo 6 anillos
+    if (rings.size() > 6) {
+        rings.resize(6);
+    }
+
+    double 
+        currentX = GPS.xPosition(), 
+        currentY = GPS.yPosition();
+
+    std::vector<std::pair<double, double>> path;
+
+    
+
+    path.emplace_back(currentX, currentY); // Punto de partida
+
+    for (const auto& ring : rings) {
+        path.emplace_back(ring.mapLocation.x *100, ring.mapLocation.y *100);
+    }
+
+    fprintf(fp,"\r--- Path to Rings ---\n");
+    for (size_t i = 0; i < path.size(); ++i) {
+        fprintf(fp,"\rPunto %d: (%.2f, %.2f)\n", i, path[i].first, path[i].second);
+    }
+    fprintf(fp,"\r----------------------\n");
+
+
+    return path;
+}
+
+
+
+
 #pragma endregion MainFuncs
 
 #pragma region ControlFuncs
@@ -731,58 +831,82 @@ bool IntakeActivation = false;
 
 
 
-bool isAllianceRing()
+bool isAllianceRing(bool sort = false)
 {
-    int hue;
-    bool isValidRing = false;
-
-    if(Side == RED)
-        hue = 10;
-        
-    else
-        hue = 180;
+    int hueTarget = (Side == RED) ? 350: 225,
+        tolerance = 15,
+        correctReadings = 0,
+        totalReadings = 5;
     
+    if(sort)
+        hueTarget = (Side == RED) ? 225: 350;
 
+    if (!IntakeOptical.isNearObject())
+        return false;
 
-    if(IntakeOptical.isNearObject())
+    for (int i = 0; i < totalReadings; ++i)
     {
         int currentHue = IntakeOptical.hue();
-        int diff = abs(currentHue - hue);
-        diff = std::min(diff, 360 - diff);  
+        int diff = abs(currentHue - hueTarget);
+        diff = min(diff, 360 - diff);  
+        if (diff < tolerance)
+            correctReadings++;
 
-        if (diff <= 30)
-            isValidRing = true;
-        else
-            isValidRing = false;
-        wait(20,msec);
+        wait(10,msec);
     }
-    else
-    isValidRing = false;
-
-    //fprintf(fp,"\r Ring is %d,\n", isValidRing);
-    return isValidRing;
-}
-
-
-bool colorSort()
-{
-    int hue;
-    bool isWrongColor = false;
-    int currentHue = IntakeOptical.hue();
     
-    if(Side == RED)
-        hue = 220;
-    else
-        hue = 10;
-
-    int diff = abs(currentHue - hue);
-    diff = std::min(diff, 360 - diff);  
-
-    if(diff < 30 && IntakeOptical.isNearObject())
-        isWrongColor = true;
-    fprintf(fp,"\r diff is %d\n", diff);
-    return isWrongColor;
+    return (correctReadings >= 4);
 }
+
+
+
+// bool colorSort()
+// {
+//     int hueTarget = (Side == RED) ? 225 : 350,
+//         tolerance = 15,
+//         correctReadings = 0,
+//         totalReadings = 5;
+
+//     if (!IntakeOptical.isNearObject())
+//         return false;
+
+//     for (int i = 0; i < totalReadings; ++i)
+//     {
+//         int currentHue = IntakeOptical.hue();
+//         int diff = abs(currentHue - hueTarget);
+//         diff = min(diff, 360 - diff);  
+//         if (diff < tolerance)
+//             correctReadings++;
+
+//         wait(16,msec);
+//     }
+
+//     return (correctReadings >= 4);
+// }
+
+
+// bool colorSort()
+// {
+//     bool isWrongColor = false;
+
+//     int 
+//         hue = (Side == RED) ? 225 : 350,
+//         tolerance = 15,
+//         currentHue = IntakeOptical.hue();
+    
+    
+
+//     int diff = abs(currentHue - hue);
+//     diff = min(diff, 360 - diff);  
+
+//     if(diff < 15 && IntakeOptical.isNearObject())
+//         isWrongColor = true;
+//     //fprintf(fp,"\r diff is %d\n", diff);
+//     return isWrongColor;
+
+
+
+// }
 
 
 
@@ -840,7 +964,7 @@ int IntakeControl()
     #ifdef MANAGER_ROBOT    
     double Intakethreshold = 200;
     #else
-    double Intakethreshold = 30;
+    double Intakethreshold = 10;
     #endif
     
     // bool isActivated = true;
@@ -870,7 +994,7 @@ int IntakeControl()
                 #ifdef MANAGER_ROBOT
             if(!isStuck(Intakethreshold))
             {
-                if(colorSort())
+                if(isAllianceRing(true))
                     sortState = true;
                 
                 if(!sortState)
@@ -905,21 +1029,24 @@ int IntakeControl()
             if(!isStuck(Intakethreshold))
             {
                 
-                if(colorSort())
+                if(isAllianceRing(true))
                     sortState = true;
                 
                 if(!sortState)
+                {
                     Intake.spin(fwd,100,pct);
-        
+                    counter = counterTask(counter);   
+                }
+
                 else
                 {
                     lastPos = Intake.position(deg);
-                    Intake.spin(fwd,100,pct);
-                    while( abs(Intake.position(deg) - lastPos) < 70)
+                    Intake1.spin(fwd,100,pct);
+                    while( abs(Intake.position(deg) - lastPos) < 50)
                         wait(20,msec);
 
-                    Intake.stop();
-                    wait(2000,msec);
+                    Intake1.spin(fwd,-100,pct);
+                    wait(300,msec);
                     sortState = false;
 
                 }
@@ -934,8 +1061,8 @@ int IntakeControl()
                 wait(400,msec);
             }
             #endif
-            counter = counterTask(counter);         
-            wait(20,msec);   
+                  
+            wait(10,msec);   
         }
         
 
@@ -949,13 +1076,12 @@ int IntakeControl()
             MogoIsFull = true;
         }
         
-        wait(20,msec);
+        wait(10,msec);
         Intake.stop();
     
     }
 }
     
-
 
 
 
@@ -966,20 +1092,33 @@ bool HoldingMogo()
 
     while(counter < 5)
     {
-        if(MogoOptical.hue() > 50 &&  MogoOptical.hue() < 70)
+        int hueValue = MogoOptical.hue(); // Guardamos el valor de hue en una variable
+        
+        // Verificamos si el valor es válido (por ejemplo, en el rango [0, 360])
+        if (hueValue >= 0 && hueValue <= 360)
         {
-                fprintf(fp, "\r HOLDING MOGO\n");
+            if(hueValue > 50 && hueValue < 80)
+            {
+                fprintf(fp, "\rHOLDINGGGGG MOGO, hue is %d \n", hueValue);
                 Mogo = true;
                 break;
+            }
+            else
+            {
+                fprintf(fp, "\rNO MOGO, hue is %d \n", hueValue);
+                counter = counter + 1;
+            }
         }
         else
         {
-            fprintf(fp, "\rNO MOGO, hue is %d \n", MogoOptical.hue());
-            counter = counter + 1;
+            fprintf(fp, "\rINVALID HUE VALUE: %d \n", hueValue);
         }
-    }
-    return Mogo;
 
+        wait(20,msec);
+    }
+    
+    fprintf(fp, "\rMOGO  %d \n", Mogo);
+    return Mogo;
 }
 
 void DropMogo()
@@ -1007,14 +1146,19 @@ void DropMogo()
     
     fprintf(fp, "\r Closest pont is %.2f , %.2f \n", closestPoint.Xcord, closestPoint.Ycord);
     
-    Chassis.set_heading(GPS.heading());
-    double angle = calculateBearing(GPS.xPosition(),GPS.yPosition(),closestPoint.Xcord,closestPoint.Ycord);
-    double distance = lowestDist;
-    int backOffset = 25;
-    Chassis.turn_to_angle(angle+180);
-    Chassis.drive_distance(-(distance-backOffset));
-    Clamp.set(false);
+    
 
+    // Chassis.set_heading(GPS.heading());
+    // double angle = calculateBearing(GPS.xPosition(),GPS.yPosition(),closestPoint.Xcord,closestPoint.Ycord);
+    // double distance = lowestDist;
+    // int backOffset = 5;
+    // Chassis.turn_to_angle(angle+180);
+    // Chassis.drive_distance(-(distance-backOffset));
+    // Clamp.set(false);
+    moveToPosition(closestPoint.Xcord, closestPoint.Ycord);
+    double angle = calculateBearing(GPS.xPosition(),GPS.yPosition(),closestPoint.Xcord*2,closestPoint.Ycord*2);
+    Chassis.turn_to_angle(angle);
+    
 }
 
 
@@ -1424,20 +1568,46 @@ void auto_Interaction_15()
          
     while(1)
     {
-        GetMobileGoal();
-        while(1)
+
+        while(!HoldingMogo())
         {
-            fprintf(fp,"\r holding a mogo\n");
-            // if(!MogoIsFull)
-                getRing();
-            // else
-            //     DropMogo();
+            GetMobileGoal();
+            wait(200,msec);
+            
         }
+        fprintf(fp,"\r holding a mogo\n");
+            if(!MogoIsFull)
+            {
+                getRing();
+                moveToPosition(120,120);
+                Chassis.turn_to_angle(180);
+            }
+            else
+                DropMogo();
+      wait(200,msec);
+    }
+//         Clamp.set(true);
+
+//         wait(600,msec);
+//         task intakect(IntakeControl);
+//         auto path = getPathToRings();
+
+//         for (const auto& point : path) 
+//         {
+           
+            
+//             fprintf(fp,"Moviendose a: (%.2f, %.2f)\n", point.first, point.second);
+//             moveToPosition(point.first, point.second);
+//         }
 
 
-   }
+//         wait(20,msec);
+// //    }
 
 }
+
+
+
 
 #endif
 #pragma endregion MAIN TASKS

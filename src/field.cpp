@@ -459,13 +459,16 @@ int Field::getIndex(Point* AdjPoint)
 { 
     int index = -1;
     auto it = find(Path2Snap2.begin(), Path2Snap2.end(), AdjPoint); 
+    fprintf(fp,"\r it is %d\n", it);
   
     // If element was found 
-    if (it != Path2Snap2.end())  
-    { 
-        index = it - Path2Snap2.begin(); 
-    } 
-
+    if (it != Path2Snap2.end()) {
+        int index = std::distance(Path2Snap2.begin(), it);
+        fprintf(fp, "\r it is at index: %d\n", index);
+    } else {
+        fprintf(fp, "\r AdjPoint not found in Path2Snap2\n");
+    }
+    
     
     return index + 1;
 } 
@@ -482,42 +485,70 @@ Path Field::Create_Path_to_Target(Point* Current, Point* Target)
     StartIndex = getIndex(Start),
     EndIndex = getIndex(End);
     int stopper = 0;
+    fprintf(fp,"\r StartI: %d\n", StartIndex);
+    fprintf(fp,"\r EndI: %d\n", EndIndex);
+
     Path PathA; // Clockwise 
     PathA.PathPoints.push_back(Start);
-    for(int i = StartIndex; i != EndIndex ; i++)
+
+
+    // for(int i = StartIndex; i != EndIndex ; i++)
+    // {
+
+
+    //     if (i == Path2Snap2.size())
+    //     {
+    //         i = 0;
+    //     }
+
+    //     fprintf(fp,"\r I path a: %d\n", i);
+    //     PathA.PathPoints.push_back(Path2Snap2[i]);
+    // }
+
+    int i = StartIndex;
+    while (i != EndIndex) 
     {
-        stopper ++;
-        fprintf(fp,"\r StartI: %d\n", StartIndex);
-        fprintf(fp,"\r EndI: %d\n", EndIndex);
-        
-        if (i == Path2Snap2.size())
-        {
-            fprintf(fp,"\r I path a: %d\n", Path2Snap2[i]);
-            i = 0;
-        }
+        fprintf(fp, "\rI path a: %d\n", i);
         PathA.PathPoints.push_back(Path2Snap2[i]);
-        if(stopper > 12)
-        break;
+    
+        i = (i + 1) % Path2Snap2.size(); 
     }
+
+
     //PathA.PathPoints.push_back(End);
     PathA.PathPoints.push_back(Target);
     PathA.calcPathLength();
 
     Path PathB; // Clockwise 
     //PathB.PathPoints.push_back(Start);
-    for(int i = StartIndex - 1; i != EndIndex - 1  ; i--)
+    
+    while (i != EndIndex) 
     {
-        PathB.PathPoints.push_back(Path2Snap2[i]);
-        if (i == 0)
-        {
-            i = Path2Snap2.size();
-            fprintf(fp,"\r I path b : %d\n", Path2Snap2[i]);
-            
-        }
+        fprintf(fp, "\rI path a: %d\n", i);
+        PathA.PathPoints.push_back(Path2Snap2[i]);
+
+        i = (i - 1 + Path2Snap2.size()) % Path2Snap2.size();
     }
+
+    // for(int i = StartIndex - 1; i != EndIndex - 1  ; i--)
+    // {
+    //     fprintf(fp,"\r I path b : %d\n", i);
+    //     PathB.PathPoints.push_back(Path2Snap2[i]);
+    //     if (i == 0)
+    //     {
+    //         i = Path2Snap2.size();
+            
+            
+    //     }
+    // }
+
+
     PathB.PathPoints.push_back(End);
     PathB.PathPoints.push_back(Target);
     PathB.calcPathLength();
+
+    fprintf(fp,"\r LPath a: %d\n", PathA.pathlength );
+    fprintf(fp,"\r LPath b: %d\n", PathB.pathlength );
 
     if(PathA.pathlength < PathB.pathlength)
     {
@@ -671,7 +702,7 @@ Path Field::Create_Path_to_Target(Point* Current, Point* Target)
 //         for(int i = 0; i < PathA.PathPoints.size(); i++)
 //         {
 //             DrivePath.PathPoints.push_back(PathA.PathPoints[i]);
-//         }
+//         }   
 //     }
 //     else
 //     {

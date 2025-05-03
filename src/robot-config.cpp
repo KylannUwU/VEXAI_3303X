@@ -29,7 +29,7 @@ double Arm_Offset = 0;
 //////////////////////////////////////////////////
 ////////////////24" Robot Specific////////////////
 //////////////////////////////////////////////////
-motor Arm = motor(PORT11, ratio6_1, true);
+motor Arm = motor(PORT11, ratio18_1, true);
 motor Intake1 = motor(PORT12, ratio6_1, true);
 motor Intake2 = motor(PORT13, ratio6_1, true);
 
@@ -45,32 +45,32 @@ digital_out IntakePiston = digital_out(Brain.ThreeWirePort.D);
 #pragma message("building for the worker")
 ai::robot_link       link(PORT2, "15in 3303X", linkType::worker );
 //15in Shared Objects
-motor leftDriveA = motor(PORT11, ratio6_1, true);  
-motor leftDriveB = motor(PORT12, ratio6_1, true);   
-motor leftDriveC = motor(PORT13, ratio6_1, true);    
-motor rightDriveA = motor(PORT18, ratio6_1, false);
-motor rightDriveB = motor(PORT19, ratio6_1, false);
-motor rightDriveC = motor(PORT20, ratio6_1, false);
-gps LGPS = gps(PORT10, -5.5, -8, vex::distanceUnits::cm, 270);
-gps RGPS = gps(PORT2, 5.5, -8, vex::distanceUnits::cm, 90);
+motor leftDriveA = motor(PORT16, ratio6_1, true);  
+motor leftDriveB = motor(PORT17, ratio6_1, true);   
+motor leftDriveC = motor(PORT20, ratio6_1, false);    
+motor rightDriveA = motor(PORT13, ratio6_1, false);
+motor rightDriveB = motor(PORT14, ratio6_1, false);
+motor rightDriveC = motor(PORT15, ratio6_1, true);
+gps LGPS = gps(PORT2, -5.5, -8, vex::distanceUnits::cm, 270);
+gps RGPS = gps(PORT5, 5.5, -8, vex::distanceUnits::cm, 90);
 //gps GPS = gps(PORT1, 133, -80, mm, 270);
 
 
 
-const int32_t InertialPort = PORT7;
+const int32_t InertialPort = PORT4;
 const int32_t opt_Port = PORT6;
-const int32_t MGopt_Port = PORT8;
+const int32_t MGopt_Port = PORT3;
 double wheel_size = 3.25;
-double Robot_x_Offset = 10;
-double Intake_Offset = 2;
-double MG_Offset = 10;
+double Robot_x_Offset = 20;
+double Intake_Offset = 12;
+double MG_Offset = 15;
 double Arm_Offset = 2;
 
 //////////////////////////////////////////////////
 ////////////////15" Robot Specific////////////////
 //////////////////////////////////////////////////
-motor Intake1 = motor(PORT4, ratio6_1, true);
-motor Intake2 = motor(PORT3, ratio6_1, true);
+motor Intake1 = motor(PORT10, ratio6_1, true);
+motor Intake2 = motor(PORT9, ratio6_1, true);
 
 #endif
 

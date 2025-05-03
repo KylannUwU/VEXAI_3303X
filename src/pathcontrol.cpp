@@ -1,28 +1,45 @@
 #include "pathcontrol.h"
 #include "robot-config.h"
 #include <sstream>
+#include "field.h"
 
 
+template<typename T>
+T clamp(T val, T min_val, T max_val) {
+    return std::max(min_val, std::min(val, max_val));
+}
+
+struct PathPoint {
+    Point position;
+    double heading_deg;
+
+    PathPoint(double x, double y, double h = -1);
+    PathPoint(Point p, double h = -1);
+};
+
+
+PathPoint::PathPoint(double x, double y, double h) {
+    position = Point{x, y};
+    heading_deg = h;
+}
+
+PathPoint::PathPoint(Point p, double h) {
+    position = p;
+    heading_deg = h;
+}
 // Parámetros de control
-double lookahead_dist = 5; 
-double base_speed = 20;      
+double lookahead_dist = 20; 
+double base_speed = 40;      
 double turn_k = 0.1; 
 
-// Estructura para representar puntos intermedios con orientación opcional
-struct PathPoint {
-  Point position;
-  double heading_deg; // -1 si no se especifica
-  
-  PathPoint(double x, double y, double h = -1) : position({x, y}), heading_deg(h) {}
-  PathPoint(Point p, double h = -1) : position(p), heading_deg(h) {}
-};
+
 
 std::vector<Point> generateBezierPath(
     Point start,
     double start_heading_deg,
     Point end, 
     double end_heading_deg,
-    double control_dist = 100, int steps = 50) 
+    double control_dist = 10, int steps = 30) 
 {
   std::vector<Point> path;
 
@@ -92,6 +109,7 @@ Point getLookahead(Point current) {
 
 // Obtiene la posición actual del robot
 Point getCurrentPosition() {
+
     return {GPS.xPosition(), GPS.yPosition()};
 }
 
@@ -181,7 +199,7 @@ void followPath(Point destination) {
 }
 
 // Función para seguir una trayectoria con destino y puntos intermedios
-void followPathWithWaypoints(Point destination, const char* waypointsStr = nullptr) {
+void followPathWithWaypoints(Point destination, const char* waypointsStr) {
     std::vector<PathPoint> waypoints;
     
     // Añadir puntos intermedios si se especificaron
@@ -199,47 +217,52 @@ void followPathWithWaypoints(Point destination, const char* waypointsStr = nullp
     purePursuit();
 }
 
-void purePursuit() 
-{
+void purePursuit() {
     bool iscompleted = false;
+
     while (!iscompleted) {
-      // Obtener posición y heading
-      double x = GPS.xPosition();
-      double y = GPS.yPosition();
-      double heading = degToRad(GPS.heading());
-  
-      Point current = {x, y};
-      Point target = getLookahead(current);
-  
-      // Calcular ángulo hacia el objetivo
-      double dx = target.Xcord - x;
-      double dy = target.Ycord - y;
-      double target_angle = atan2(dy, dx);
-  
-      double angle_error = normalizeAngle(target_angle - heading);
-  
-      // Control de motores
-      double turn = turn_k * angle_error;
-      double left_speed = base_speed - turn * 50;
-      double right_speed = base_speed + turn * 50;
+        Point current = getCurrentPosition();
+        double heading = degToRad(GPS.heading());
 
-      double leftSpeedinVolts = (left_speed/100) * 12;
-      double rightSpeedinVolts = (right_speed/100) * 12;
+        Point target = getLookahead(current);
 
-      // fprintf(fp, "\r Left %.2f, Right %.2f\n", leftSpeedinVolts, rightSpeedinVolts);
-      Chassis.DriveL.spin(fwd, left_speed, pct);
-      Chassis.DriveR.spin(fwd, right_speed, pct);
-  
-      // Fin si estamos muy cerca del último punto
-      if (distanceTo(current, path.back()) < 50) {
-        Chassis.drive_with_voltage(0,0);
-        iscompleted = true;
-        break;
-      }
-  
-      wait(20, msec);
+        double dx = target.Xcord - current.Xcord;
+        double dy = target.Ycord - current.Ycord;
+
+        double target_angle = atan2(dy, dx);
+        double angle_error = normalizeAngle(target_angle - heading);
+
+        // Giro limitado y suave
+        double turn = clamp(turn_k * angle_error, -1.0, 1.0);
+
+        double adjusted_base = base_speed;
+        if (fabs(angle_error) > 0.5) adjusted_base *= 0.7; // más lento en curvas cerradas
+
+        double left_speed = adjusted_base - turn * 50;
+        double right_speed = adjusted_base + turn * 50;
+
+        Chassis.DriveL.spin(fwd, left_speed, pct);
+        Chassis.DriveR.spin(fwd, right_speed, pct);
+
+        if (distanceTo(current, path.back()) < 50) {
+            Chassis.drive_with_voltage(0, 0);
+            iscompleted = true;
+        }
+
+        wait(20, msec);
     }
 }
+
+
+
+
+// vector<Point> getWayPoints()
+// {
+//     vector<Point> targetPoints;
+//     int quantity;
+
+    
+// }
 
 // Ejemplos de uso:
 // Para ir a un punto específico:

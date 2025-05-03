@@ -58,6 +58,7 @@ void pre_auton(void)
   wait(50, msec);
   Brain.Screen.clearScreen();
   // Chassis.Gyro.setHeading(GPS.heading(),deg);
+  Chassis.set_heading(GPS.heading());
 }
 
 
@@ -151,10 +152,13 @@ bool Starting = true;
 
 void testing_tuning()
 {
-  Clamp.set(true);
-  wait(300,msec);
-  task ic15(IntakeControl);
-  //purePursuit();
+  // armControl(200);
+  // wait(2000,msec);
+  // armControl(220);
+  // wait(2000,msec);
+  // armControl(340);
+  // wait(2000,msec);
+  // armControl(220);   
 }
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
@@ -254,7 +258,7 @@ int main() {
       if (counter > 15)
       {
 
-      
+      //fprintf(fp,"\r Pos: %.2f\n", ArmRotation.position(deg));
 
       //fprintf(fp,"\r newGPS val X: %.2f is %.2f + %.2f Y: %.2f is %.2f + %.2f \n", GPS.xPosition(), GPS.Left_GPS.xPosition(vex::distanceUnits::cm), GPS.Right_GPS.xPosition(vex::distanceUnits::cm), GPS.yPosition(), GPS.Left_GPS.yPosition(vex::distanceUnits::cm), GPS.Right_GPS.yPosition(vex::distanceUnits::cm)); 
       // fprintf(fp,"\r FindRing %.1f\n",Intake.torque(vex::torqueUnits::InLb));
